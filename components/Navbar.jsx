@@ -85,14 +85,19 @@ export default function Navbar() {
           {/* Profile image */}
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center">
-              {/* <Image
-                src={session?.user?.image || "/avatar.png"}
+            {
+              session?.user?.image && (
+                               <Image
+                src={session?.user?.image}
                 width={48}
                 height={48}
                 alt="Profile"
                 className="rounded-full w-12 h-12 object-cover bg-gray-200 border-2 border-blue-500"
                 priority
-              /> */}
+              /> 
+              )
+            }
+
             </Link>
             <div className="hidden lg:flex flex-col">
               <span className="text-white font-semibold">

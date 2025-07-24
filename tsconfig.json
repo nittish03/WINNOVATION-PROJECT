@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/ui/input-otp.jsx", "app/layout.jsx", "stackbit.config.js", "components/Navbar.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/ui/input-otp.jsx", "app/layout.jsx", "stackbit.config.js", "components/Navbar.jsx", "next.config.js"],
   "exclude": ["node_modules"]
 }
