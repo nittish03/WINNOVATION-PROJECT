@@ -16,7 +16,7 @@ export default function HomePage() {
             <span className="text-blue-600 block">Portal</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Enhance your skills, track your progress, and earn certificates in a comprehensive learning environment designed for modern students.
+            Enhance your skills, track your progress,  in a comprehensive learning environment designed for modern students.
           </p>
 
           {session ? (

@@ -44,3 +44,6 @@
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in-out;
 }
+:root{
+  transition: all 0.3s ease-in-out !important;
+}

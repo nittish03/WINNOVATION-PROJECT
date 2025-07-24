@@ -157,12 +157,12 @@ export default function Dashboard() {
             icon={<Award className="h-8 w-8" />} 
             color="purple" 
           />
-          <StatCard 
+          {/* <StatCard 
             title="Certificates" 
             value={stats.certificates} 
             icon={<Award className="h-8 w-8" />} 
             color="yellow" 
-          />
+          /> */}
         </div>
 
         {/* Student Content Grid */}
@@ -173,7 +173,7 @@ export default function Dashboard() {
               { href: "/courses", title: "Browse Courses" },
               { href: "/assignments", title: "View Assignments" },
               { href: "/skills", title: "Explore Skills" },
-              { href: "/certificates", title: "My Certificates" }
+              // { href: "/certificates", title: "My Certificates" }
             ]}
           />
           

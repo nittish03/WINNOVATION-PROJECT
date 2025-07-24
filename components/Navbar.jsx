@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
 import { 
   Menu, 
   X, 
@@ -15,7 +14,6 @@ import {
   BarChart3, 
   FileText, 
   MessageSquare,
-  Sparkles,
   Target,
   Settings
 } from "lucide-react"
@@ -26,8 +24,6 @@ export default function NavBar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [activeHover, setActiveHover] = useState(null)
-  const navRef = useRef(null)
 
   // Handle scroll effect
   useEffect(() => {
@@ -44,30 +40,29 @@ export default function NavBar() {
   }, [pathname])
 
   const studentLinks = [
-    { href: "/dashboard", label: "Dashboard", icon: BarChart3, color: "from-blue-500 to-purple-500" },
-    { href: "/skills", label: "Browse Skills", icon: Award, color: "from-emerald-500 to-teal-500" },
-    { href: "/user-skills", label: "My Skills", icon: Target, color: "from-indigo-500 to-purple-500" },
-    { href: "/courses", label: "Courses", icon: BookOpen, color: "from-orange-500 to-red-500" },
-    { href: "/my-courses", label: "My Courses", icon: BookOpen, color: "from-pink-500 to-rose-500" },
-    { href: "/assignments", label: "Assignments", icon: FileText, color: "from-violet-500 to-blue-500" },
-    { href: "/certificates", label: "Certificates", icon: Award, color: "from-yellow-500 to-orange-500" },
-    { href: "/discussions", label: "Discussions", icon: MessageSquare, color: "from-purple-500 to-pink-500" },
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    { href: "/skills", label: "Browse Skills", icon: Award },
+    { href: "/user-skills", label: "My Skills", icon: Target },
+    { href: "/courses", label: "Courses", icon: BookOpen },
+    { href: "/my-courses", label: "My Courses", icon: BookOpen },
+    { href: "/assignments", label: "Assignments", icon: FileText },
+    { href: "/discussions", label: "Discussions", icon: MessageSquare },
   ]
 
   const adminLinks = [
-    { href: "/dashboard", label: "Dashboard", icon: BarChart3, color: "from-violet-500 to-purple-500" },
-    { href: "/admin/users", label: "Users", icon: Users, color: "from-blue-500 to-indigo-500" },
-    { href: "/admin/skills", label: "Manage Skills", icon: Award, color: "from-emerald-500 to-green-500" },
-    { href: "/admin/courses", label: "Manage Courses", icon: BookOpen, color: "from-orange-500 to-amber-500" },
-    { href: "/admin/assignments", label: "Assignments", icon: FileText, color: "from-red-500 to-pink-500" },
-    { href: "/admin/analytics", label: "Analytics", icon: Settings, color: "from-teal-500 to-cyan-500" },
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/skills", label: "Manage Skills", icon: Award },
+    { href: "/admin/courses", label: "Manage Courses", icon: BookOpen },
+    { href: "/admin/assignments", label: "Assignments", icon: FileText },
+    { href: "/admin/analytics", label: "Analytics", icon: Settings },
   ]
 
   const instructorLinks = [
-    { href: "/dashboard", label: "Dashboard", icon: BarChart3, color: "from-blue-500 to-purple-500" },
-    { href: "/courses", label: "My Courses", icon: BookOpen, color: "from-green-500 to-teal-500" },
-    { href: "/assignments", label: "Assignments", icon: FileText, color: "from-purple-500 to-pink-500" },
-    { href: "/discussions", label: "Discussions", icon: MessageSquare, color: "from-orange-500 to-red-500" },
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
+    { href: "/courses", label: "My Courses", icon: BookOpen },
+    { href: "/assignments", label: "Assignments", icon: FileText },
+    { href: "/discussions", label: "Discussions", icon: MessageSquare },
   ]
 
   const getLinks = () => {
@@ -80,387 +75,238 @@ export default function NavBar() {
 
   return (
     <>
-      <motion.nav
-        ref={navRef}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={`sticky top-0 px-4 left-0 right-0 z-50 transition-all duration-500${
+      <nav
+        className={`sticky top-0 px-4 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled 
-            ? 'bg-white/90 backdrop-blur-xl shadow-2xl border-b border-gray-200/50' 
-            : 'bg-white/95 backdrop-blur-md shadow-lg'
+            ? 'bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-200' 
+            : 'bg-white/90 backdrop-blur-md shadow-md'
         }`}
       >
-        <div className="">
-          <div className="flex justify-between items-center h-16">
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center justify-center ">
-              {session && (
-                <AnimatePresence>
-                  <div className="flex items-center gap-2  overflow-hidden">
-              <Link href="/" className="font-extrabold text-lg bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Winnovation</Link>
+        <div className="flex justify-between items-center h-16">
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center justify-center">
+            <Link href="/" className="font-extrabold text-lg bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent mr-8">
+              Winnovation
+            </Link>
 
-                    {links.map((link, index) => {
-                      const Icon = link.icon
-                      const isActive = pathname === link.href
-                      
-                      return (
-                        <motion.div
-                          key={link.href}
-                          initial={{ opacity: 0, y: -20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          onHoverStart={() => setActiveHover(link.href)}
-                          onHoverEnd={() => setActiveHover(null)}
-                        >
-                          <Link
-                            href={link.href}
-                            className={`relative flex items-center px-2 py-2 rounded-xl font-medium transition-all duration-300 overflow-hidden group whitespace-nowrap text-xs ${
-                              isActive
-                                ? 'text-white shadow-lg transform scale-105'
-                                : 'text-gray-700 hover:text-gray-400 hover:shadow-md hover:scale-105'
-                            }`}
-                          >
-                            {/* Animated Background */}
-                            <motion.div
-                              className={`absolute inset-0 bg-gradient-to-r ${link.color} opacity-0 ${
-                                isActive ? 'opacity-100' : 'group-hover:opacity-100'
-                              }`}
-                              initial={false}
-                              animate={{ opacity: isActive ? 1 : 0 }}
-                              whileHover={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                            />
-                            
-                            {/* Shimmer Effect */}
-                            <motion.div
-                              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
-                              animate={
-                                activeHover === link.href || isActive
-                                  ? { translateX: '200%' }
-                                  : { translateX: '-100%' }
-                              }
-                              transition={{ duration: 0.6, ease: "easeInOut" }}
-                            />
-
-                            <motion.div
-                              whileHover={{ rotate: 360 }}
-                              transition={{ duration: 0.5 }}
-                            >
-                              <Icon className="h-4 w-4 relative z-10 flex-shrink-0" />
-                            </motion.div>
-                            <span className="relative z-10 text-xs xl:text-sm">{link.label}</span>
-
-                            {/* Active Indicator */}
-                            {isActive && (
-                              <motion.div
-                                layoutId="activeTab"
-                                className="absolute -bottom-1 left-1/2 w-2 h-2 bg-white rounded-full"
-                                style={{ x: '-50%' }}
-                              />
-                            )}
-                          </Link>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                </AnimatePresence>
-              )}
-            </div>
-
-            {/* User Menu */}
-            <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
-              {session ? (
-            <Link href={"/profile"}>
-
-                <div className="flex items-center space-x-3">
-                  {/* Animated User Profile */}
-                  <motion.div
-                    className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200/50"
-                    whileHover={{ scale: 1.02, boxShadow: "0 8px 25px rgba(0,0,0,0.1)" }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <motion.div
-                      className="relative h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden flex-shrink-0"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.8 }}
+            {session && (
+              <div className="flex items-center gap-1">
+                {links.map((link) => {
+                  const Icon = link.icon
+                  const isActive = pathname === link.href
+                  
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-xs transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
+                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                      }`}
                     >
-                      {
-                        session?.user?.image ?<>
-<Image 
-  src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
-  alt="User profile"
-  height={100}
-  width={100}
-/>
+                      <Icon className="h-4 w-4" />
+                      <span className="text-xs xl:text-sm">{link.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
-                          </>:<>
-                          <User className="h-3 w-3 text-white" />
-                          </>
-                        
-                      }
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full"
-                        animate={{ translateX: ['100%', '-100%'] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      />
-                    </motion.div>
+          {/* User Menu */}
+          <div className="hidden md:flex items-center space-x-3">
+            {session ? (
+              <Link href="/profile">
+                <div className="flex items-center space-x-3">
+                  {/* User Profile */}
+                  <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
+                    <div className="relative h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+                      {session?.user?.image ? (
+                        <Image 
+                          src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
+                          alt="User profile"
+                          height={28}
+                          width={28}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <User className="h-4 w-4 text-white" />
+                      )}
+                    </div>
                     
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex flex-col">
                       <span className="text-xs font-medium text-gray-900 truncate max-w-24 xl:max-w-32">
                         {session.user.name || session.user.email}
                       </span>
-                      <motion.span
-                        className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                          session.user.role === "admin" 
-                            ? "bg-red-100 text-red-800"
-                            : session.user.role === "instructor"
-                            ? "bg-blue-100 text-blue-800" 
-                            : "bg-green-100 text-green-800"
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                      >
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        session.user.role === "admin" 
+                          ? "bg-red-100 text-red-700"
+                          : session.user.role === "instructor"
+                          ? "bg-blue-100 text-blue-700" 
+                          : "bg-green-100 text-green-700"
+                      }`}>
                         {session.user.role === "admin" ? "Admin" : 
                          session.user.role === "instructor" ? "Instructor" : "Student"}
-                      </motion.span>
+                      </span>
                     </div>
-                  </motion.div>
+                  </div>
 
-
-
-                  {/* Animated Logout Button */}
-                  <motion.button
+                  {/* Logout Button */}
+                  <button
                     onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="flex items-center space-x-1.5 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 group"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                   >
-                    <motion.div
-                      whileHover={{ rotate: 180 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <LogOut className="h-4 w-4" />
-                    </motion.div>
-                    
-                    
+                    <LogOut className="h-4 w-4" />
                     <span className="text-sm font-medium hidden xl:block">Logout</span>
-                  </motion.button>
+                  </button>
                 </div>
-                            </Link>
+              </Link>
+            ) : (
+              /* Guest Navigation */
+              <div className="flex items-center space-x-2">
+                <Link
+                  href="/login"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-md"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+          </div>
 
-              ) : (
-                /* Guest Navigation with Animations */
-                <div className="flex items-center space-x-2">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link
-                      href="/login"
-                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-blue-50"
-                    >
-                      Sign In
-                    </Link>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link
-                      href="/signup"
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
-                    >
-                      Sign Up
-                    </Link>
-                  </motion.div>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <motion.button
-                onClick={() => setIsOpen(!isOpen)}
-                className="text-gray-700 hover:text-blue-600 p-2 rounded-xl transition-colors duration-300"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <AnimatePresence mode="wait">
-                  {isOpen ? (
-                    <motion.div
-                      key="close"
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: 180 }}
-                      exit={{ rotate: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <X className="h-6 w-6" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="menu"
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: 0 }}
-                      exit={{ rotate: 180 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Menu className="h-6 w-6" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-700 hover:text-blue-600 p-2 rounded-lg transition-colors duration-200"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-2xl"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <div className="max-w-7xl mx-auto px-4 py-4">
-                {session ? (
-                  <>
-                    {/* Mobile User Info */}
-                    <motion.div
-                      className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl mb-4"
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+        {isOpen && (
+          <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-lg">
+            <div className="px-4 py-4 space-y-3">
+              {session ? (
+                <>
+                  {/* Mobile User Info */}
+                  <div className="flex items-center space-x-3 px-3 py-3 bg-gray-50 rounded-lg">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                      {session?.user?.image ? (
+                        <Image 
+                          src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
+                          alt="User profile"
+                          height={40}
+                          width={40}
+                          className="rounded-full"
+                        />
+                      ) : (
                         <User className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900 truncate">
-                          {session.user.name || session.user.email}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {session.user.university || 
-                           (session.user.role === 'admin' ? 'Admin Panel' :
-                            session.user.role === 'instructor' ? 'Instructor Portal' : 'Student Portal')}
-                        </div>
-                        <span className={`inline-block mt-1 px-2 py-1 text-xs rounded-full font-medium ${
-                          session.user.role === "admin" 
-                            ? "bg-red-100 text-red-800"
-                            : session.user.role === "instructor"
-                            ? "bg-blue-100 text-blue-800" 
-                            : "bg-green-100 text-green-800"
-                        }`}>
-                          {session.user.role === "admin" ? "Admin" : 
-                           session.user.role === "instructor" ? "Instructor" : "Student"}
-                        </span>
-                      </div>
-                    </motion.div>
-
-                    {/* Mobile Navigation Links */}
-                    <div className="space-y-1 mb-4">
-                      {links.map((link, index) => {
-                        const Icon = link.icon
-                        const isActive = pathname === link.href
-                        
-                        return (
-                          <motion.div
-                            key={link.href}
-                            initial={{ x: -50, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.05 * (index + 2) }}
-                          >
-                            <Link
-                              href={link.href}
-                              className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 ${
-                                isActive
-                                  ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                  : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
-                              }`}
-                              onClick={() => setIsOpen(false)}
-                            >
-                              <Icon className="h-5 w-5 flex-shrink-0" />
-                              <span>{link.label}</span>
-                            </Link>
-                          </motion.div>
-                        )
-                      })}
+                      )}
                     </div>
-
-                    {/* Mobile Profile Link */}
-                    <motion.div
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.05 * (links.length + 2) }}
-                    >
-                      <Link
-                        href="/profile"
-                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <Settings className="h-5 w-5 flex-shrink-0" />
-                        <span>Profile Settings</span>
-                      </Link>
-                    </motion.div>
-
-                    {/* Mobile Logout */}
-                    <motion.button
-                      onClick={() => {
-                        signOut({ callbackUrl: '/login' })
-                        setIsOpen(false)
-                      }}
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all duration-300 mt-2"
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.05 * (links.length + 4) }}
-                    >
-                      <LogOut className="h-5 w-5 flex-shrink-0" />
-                      <span>Logout</span>
-                    </motion.button>
-                  </>
-                ) : (
-                  /* Mobile Guest Navigation */
-                  <div className="space-y-3">
-                    <motion.div
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <Link
-                        href="/login"
-                        className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl text-base font-medium transition-all duration-300 text-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Sign In
-                      </Link>
-                    </motion.div>
-                    <motion.div
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <Link
-                        href="/singup"
-                        className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 shadow-lg text-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Sign Up
-                      </Link>
-                    </motion.div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900 truncate">
+                        {session.user.name || session.user.email}
+                      </div>
+                      <span className={`inline-block mt-1 px-2 py-1 text-xs rounded-full font-medium ${
+                        session.user.role === "admin" 
+                          ? "bg-red-100 text-red-700"
+                          : session.user.role === "instructor"
+                          ? "bg-blue-100 text-blue-700" 
+                          : "bg-green-100 text-green-700"
+                      }`}>
+                        {session.user.role === "admin" ? "Admin" : 
+                         session.user.role === "instructor" ? "Instructor" : "Student"}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
+
+                  {/* Mobile Navigation Links */}
+                  <div className="space-y-1">
+                    {links.map((link) => {
+                      const Icon = link.icon
+                      const isActive = pathname === link.href
+                      
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                            isActive
+                              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                              : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                          }`}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span>{link.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+
+                  {/* Mobile Profile Link */}
+                  <Link
+                    href="/profile"
+                    className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>Profile Settings</span>
+                  </Link>
+
+                  {/* Mobile Logout */}
+                  <button
+                    onClick={() => {
+                      signOut({ callbackUrl: '/login' })
+                      setIsOpen(false)
+                    }}
+                    className="flex items-center space-x-3 px-3 py-3 text-gray-700 hover:text-red-600 hover:bg-red-50 w-full text-left rounded-lg transition-colors duration-200"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                /* Mobile Guest Navigation */
+                <div className="space-y-2">
+                  <Link
+                    href="/login"
+                    className="block px-3 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors duration-200 text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-3 rounded-lg text-sm font-medium transition-colors duration-200 text-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
       
       {/* Overlay for mobile menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
     </>
   )
 }

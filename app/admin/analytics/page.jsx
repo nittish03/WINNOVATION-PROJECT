@@ -68,7 +68,7 @@ export default function AdminAnalyticsPage() {
       case 'user_registered': return <UserCheck className="h-4 w-4" />
       case 'enrollment': return <BookOpen className="h-4 w-4" />
       case 'submission': return <FileText className="h-4 w-4" />
-      case 'certificate': return <Award className="h-4 w-4" />
+      // case 'certificate': return <Award className="h-4 w-4" />
       default: return <Activity className="h-4 w-4" />
     }
   }
@@ -167,7 +167,7 @@ export default function AdminAnalyticsPage() {
             changePositive={true}
             small={true}
           />
-          <MetricCard
+          {/* <MetricCard
             title="Certificates"
             value={analytics.totalCertificates?.toLocaleString() || 0}
             icon={<GraduationCap className="h-6 w-6" />}
@@ -175,7 +175,7 @@ export default function AdminAnalyticsPage() {
             change={`${analytics.completionRate}% completion`}
             changePositive={true}
             small={true}
-          />
+          /> */}
           <MetricCard
             title="Total Enrollments"
             value={analytics.totalEnrollments?.toLocaleString() || 0}

@@ -62,7 +62,7 @@ const Footer = () => {
     { icon: GraduationCap, label: "Students Registered", value: "120+", color: "text-blue-400" },
     { icon: BookOpen, label: "Courses Published", value: "18", color: "text-purple-400" },
     { icon: Star, label: "Skills Catalogued", value: "40+", color: "text-yellow-400" },
-    { icon: Rocket, label: "Certificates Issued", value: "60+", color: "text-green-400" },
+    // { icon: Rocket, label: "Certificates Issued", value: "60+", color: "text-green-400" },
   ];
 
   const trail = useTrail(stats.length, {
