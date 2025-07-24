@@ -2,37 +2,33 @@ import { NextResponse } from 'next/server'
 import { prismaDB } from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
 import { authOptions } from '@/lib/authOption'
+import bcrypt from 'bcryptjs'
 
-export async function GET() {
+export async function POST(request) {
+  const session = await getServerSession(authOptions)
+  if (!session || session.user.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const users = await prismaDB.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        university: true,
-        degree: true,
-        branch: true,
-        createdAt: true,
-        _count: {
-          select: {
-            enrollments: true,
-            certificates: true,
-            skills: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+    const { name, email, role, university, degree, branch } = await request.json()
+    
+    const hashedPassword = await bcrypt.hash('password123', 10) // Default password
+    
+    const user = await prismaDB.user.create({
+      data: {
+        name,
+        email,
+        hashedPassword,
+        role,
+        university,
+        degree,
+        branch
+      }
     })
-
-    return NextResponse.json(users)
+    
+    return NextResponse.json(user)
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
 }
