@@ -1,9 +1,10 @@
 'use client'
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import axios from "axios"
-import { FileText, Calendar, Users, ArrowLeft, Edit, Eye, Download } from "lucide-react"
+import { FileText, Calendar, Users, ArrowLeft, Download, Eye, Edit, Star, Save, X, Plus } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 
@@ -13,7 +14,28 @@ export default function AdminAssignmentDetailPage() {
   const params = useParams()
   const [assignment, setAssignment] = useState(null)
   const [submissions, setSubmissions] = useState([])
+  const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  
+  // Edit functionality states
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    maxPoints: 100
+  })
+
+  // Grade functionality states
+  const [showGradeModal, setShowGradeModal] = useState(false)
+  const [gradingSubmission, setGradingSubmission] = useState(null)
+  const [gradeLoading, setGradeLoading] = useState(false)
+  const [gradeFormData, setGradeFormData] = useState({
+    points: '',
+    feedback: ''
+  })
 
   useEffect(() => {
     if (!session || session.user.role !== 'admin') {
@@ -21,41 +43,97 @@ export default function AdminAssignmentDetailPage() {
       return
     }
     if (params.id) {
-      loadAssignmentDetails()
+      loadAssignmentData()
     }
   }, [session, router, params.id])
 
-  const loadAssignmentDetails = async () => {
+  const loadAssignmentData = async () => {
     try {
+      setLoading(true)
+      setError(null)
+      
       const [assignmentRes, submissionsRes] = await Promise.all([
         axios.get(`/api/admin/assignments/${params.id}`),
         axios.get(`/api/admin/assignments/${params.id}/submissions`)
       ])
+      
       setAssignment(assignmentRes.data)
-      setSubmissions(submissionsRes.data)
+      
+      if (submissionsRes.data) {
+        setSubmissions(submissionsRes.data.submissions || [])
+        setStats(submissionsRes.data.stats)
+      }
     } catch (error) {
-      console.error('Error loading assignment details:', error)
-      toast.error('Failed to load assignment details')
-      router.push('/admin/assignments')
+      console.error('Error loading assignment:', error)
+      setError(error.response?.data?.error || 'Failed to load assignment data')
     } finally {
       setLoading(false)
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'submitted': return 'bg-green-100 text-green-800'
-      case 'graded': return 'bg-blue-100 text-blue-800'
-      case 'overdue': return 'bg-red-100 text-red-800'
-      default: return 'bg-yellow-100 text-yellow-800'
+  // Edit Assignment Functions
+  const handleEditClick = () => {
+    setEditFormData({
+      title: assignment.title,
+      description: assignment.description || '',
+      dueDate: assignment.dueDate ? new Date(assignment.dueDate).toISOString().slice(0, 16) : '',
+      maxPoints: assignment.maxPoints
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      setEditLoading(true)
+      
+      const response = await axios.put(`/api/admin/assignments/${params.id}`, editFormData)
+      
+      setAssignment(response.data)
+      setShowEditModal(false)
+      toast.success('Assignment updated successfully!')
+    } catch (error) {
+      console.error('Error updating assignment:', error)
+      toast.error(error.response?.data?.error || 'Failed to update assignment')
+    } finally {
+      setEditLoading(false)
     }
   }
 
-  const getSubmissionStatus = (submission, assignment) => {
-    if (submission.grade) return 'graded'
-    if (submission) return 'submitted'
-    if (new Date(assignment.dueDate) < new Date()) return 'overdue'
-    return 'pending'
+  // Grade Submission Functions
+  const handleGradeClick = (submission) => {
+    setGradingSubmission(submission)
+    setGradeFormData({
+      points: submission.grade?.points || '',
+      feedback: submission.grade?.feedback || ''
+    })
+    setShowGradeModal(true)
+  }
+
+  const handleGradeSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      setGradeLoading(true)
+      
+      await axios.post('/api/admin/grades', {
+        assignmentId: assignment.id,
+        userId: gradingSubmission.userId,
+        points: parseInt(gradeFormData.points),
+        feedback: gradeFormData.feedback
+      })
+      
+      setShowGradeModal(false)
+      setGradingSubmission(null)
+      toast.success('Grade submitted successfully!')
+      
+      // Reload data to reflect changes
+      loadAssignmentData()
+    } catch (error) {
+      console.error('Error submitting grade:', error)
+      toast.error(error.response?.data?.error || 'Failed to submit grade')
+    } finally {
+      setGradeLoading(false)
+    }
   }
 
   if (loading) {
@@ -66,20 +144,30 @@ export default function AdminAssignmentDetailPage() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600">Error</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Link href="/admin/assignments" className="text-blue-600 hover:text-blue-800">
+              Back to assignments
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!assignment) {
     return (
       <div className="min-h-screen bg-gray-50 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-12">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900">Assignment not found</h3>
-            <p className="mt-1 text-gray-500">The assignment you're looking for doesn't exist.</p>
-            <Link
-              href="/admin/assignments"
-              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Assignments
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900">Assignment not found</h1>
+            <Link href="/admin/assignments" className="text-blue-600 hover:text-blue-800">
+              Back to assignments
             </Link>
           </div>
         </div>
@@ -91,187 +179,346 @@ export default function AdminAssignmentDetailPage() {
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/admin/assignments"
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-5 w-5 mr-1" />
-                Back to Assignments
-              </Link>
-              <div className="h-6 border-l border-gray-300"></div>
-              <h1 className="text-3xl font-bold text-gray-900">Assignment Details</h1>
-            </div>
-            <div className="flex space-x-2">
-              <Link
-                href={`/admin/assignments/${assignment.id}/edit`}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Link>
-            </div>
+        <div className="flex items-center mb-8">
+          <Link
+            href="/admin/assignments"
+            className="mr-4 p-2 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{assignment.title}</h1>
+            <p className="text-gray-600">{assignment.course?.title}</p>
           </div>
         </div>
 
-        {/* Assignment Info */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start">
-              <FileText className="h-10 w-10 text-blue-600 mt-1" />
-              <div className="ml-4">
-                <h2 className="text-2xl font-bold text-gray-900">{assignment.title}</h2>
-                <p className="text-gray-600 mt-2">{assignment.description}</p>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Assignment Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Assignment Details</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <p className="mt-1 text-gray-900">{assignment.description || 'No description provided'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-sm font-medium text-gray-500">Course:</span>
-                    <p className="text-gray-900">{assignment.course?.title}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-500">Due Date:</span>
-                    <p className="text-gray-900">
-                      {new Date(assignment.dueDate).toLocaleDateString()} at{' '}
-                      {new Date(assignment.dueDate).toLocaleTimeString()}
+                    <label className="block text-sm font-medium text-gray-700">Due Date</label>
+                    <p className="mt-1 text-gray-900 flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      {assignment.dueDate ? new Date(assignment.dueDate).toLocaleString() : 'No due date'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-gray-500">Max Points:</span>
-                    <p className="text-gray-900">{assignment.maxPoints}</p>
+                    <label className="block text-sm font-medium text-gray-700">Max Points</label>
+                    <p className="mt-1 text-gray-900">{assignment.maxPoints}</p>
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Created By</label>
+                  <p className="mt-1 text-gray-900">{assignment.createdBy?.name}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Submissions */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Submissions</h2>
+              {submissions.length === 0 ? (
+                <p className="text-gray-500">No submissions yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {submissions.map(submission => (
+                    <div key={submission.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900">{submission.user?.name}</p>
+                          <p className="text-sm text-gray-500">
+                            Submitted: {new Date(submission.submittedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {submission.grade ? (
+                            <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded">
+                              {submission.grade.points}/{assignment.maxPoints}
+                            </span>
+                          ) : (
+                            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded">
+                              Pending
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handleGradeClick(submission)}
+                            className="text-blue-600 hover:text-blue-800 p-1"
+                            title={submission.grade ? "Edit Grade" : "Grade Submission"}
+                          >
+                            <Star className="h-4 w-4" />
+                          </button>
+                          {submission.fileUrl && (
+                            <Link
+                              href={submission.fileUrl}
+                              target="_blank"
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-gray-700">{submission.content}</p>
+                      {submission.grade?.feedback && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded">
+                          <p className="text-sm text-gray-600">
+                            <strong>Feedback:</strong> {submission.grade.feedback}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Stats Sidebar */}
+          <div className="space-y-6">
+            {stats && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Submissions</span>
+                    <span className="font-medium">{stats.totalSubmissions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Graded</span>
+                    <span className="font-medium">{stats.gradedSubmissions}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pending</span>
+                    <span className="font-medium">{stats.pendingGrading}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Average Score</span>
+                    <span className="font-medium">
+                      {stats.averageScore !== null ? `${stats.averageScore}/${assignment.maxPoints}` : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Submission Rate</span>
+                    <span className="font-medium">{stats.submissionRate}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <button
+                  onClick={handleEditClick}
+                  className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Assignment
+                </button>
+                <button
+                  onClick={() => {
+                    // Quick grade all pending submissions
+                    const pendingSubmissions = submissions.filter(s => !s.grade)
+                    if (pendingSubmissions.length === 0) {
+                      toast.info('No pending submissions to grade')
+                      return
+                    }
+                    // You could implement bulk grading here
+                    toast.info('Click individual star icons to grade submissions')
+                  }}
+                  className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 flex items-center justify-center"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Grade Submissions
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Submissions Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{submissions.length}</div>
-            <div className="text-sm text-gray-600">Total Submissions</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {submissions.filter(s => s.grade).length}
+        {/* Edit Assignment Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Edit Assignment</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <input
+                    type="datetime-local"
+                    value={editFormData.dueDate}
+                    onChange={(e) => setEditFormData({...editFormData, dueDate: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Points</label>
+                  <input
+                    type="number"
+                    value={editFormData.maxPoints}
+                    onChange={(e) => setEditFormData({...editFormData, maxPoints: parseInt(e.target.value)})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                    min="1"
+                    required
+                  />
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={editLoading}
+                    className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {editLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Update Assignment
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-            <div className="text-sm text-gray-600">Graded</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">
-              {submissions.filter(s => !s.grade).length}
-            </div>
-            <div className="text-sm text-gray-600">Pending Review</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              {submissions.length > 0 
-                ? Math.round(submissions.filter(s => s.grade).reduce((acc, s) => acc + s.grade.points, 0) / submissions.filter(s => s.grade).length) || 0
-                : 0
-              }
-            </div>
-            <div className="text-sm text-gray-600">Average Score</div>
-          </div>
-        </div>
+        )}
 
-        {/* Submissions Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Submissions</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Submitted At
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Grade
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {submissions.map((submission) => {
-                  const status = getSubmissionStatus(submission, assignment)
-                  return (
-                    <tr key={submission.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                            <Users className="h-4 w-4 text-gray-600" />
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">
-                              {submission.user?.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {submission.user?.email}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {submission.submittedAt 
-                          ? new Date(submission.submittedAt).toLocaleString()
-                          : 'Not submitted'
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                          {status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {submission.grade 
-                          ? `${submission.grade.points}/${assignment.maxPoints}`
-                          : 'Not graded'
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => router.push(`/admin/submissions/${submission.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          {submission.fileUrl && (
-                            <a
-                              href={submission.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              <Download className="h-4 w-4" />
-                            </a>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Grade Submission Modal */}
+        {showGradeModal && gradingSubmission && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Grade Submission - {gradingSubmission.user?.name}
+                </h2>
+                <button
+                  onClick={() => setShowGradeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-        {/* Empty State */}
-        {submissions.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-lg font-medium text-gray-900">No submissions yet</h3>
-            <p className="mt-1 text-gray-500">Students haven't submitted their work for this assignment.</p>
+              {/* Submission Details */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium text-gray-900 mb-2">Submission Content:</h3>
+                <p className="text-gray-700 text-sm">{gradingSubmission.content}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Submitted: {new Date(gradingSubmission.submittedAt).toLocaleString()}
+                </p>
+                {gradingSubmission.fileUrl && (
+                  <div className="mt-2">
+                    <Link
+                      href={gradingSubmission.fileUrl}
+                      target="_blank"
+                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      View Attachment
+                    </Link>
+                  </div>
+                )}
+              </div>
+              
+              <form onSubmit={handleGradeSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Points (Max: {assignment.maxPoints})
+                  </label>
+                  <input
+                    type="number"
+                    value={gradeFormData.points}
+                    onChange={(e) => setGradeFormData({...gradeFormData, points: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                    min="0"
+                    max={assignment.maxPoints}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Feedback</label>
+                  <textarea
+                    value={gradeFormData.feedback}
+                    onChange={(e) => setGradeFormData({...gradeFormData, feedback: e.target.value})}
+                    rows={4}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                    placeholder="Provide feedback for the student..."
+                  />
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={gradeLoading}
+                    className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {gradeLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Submit Grade
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowGradeModal(false)}
+                    className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

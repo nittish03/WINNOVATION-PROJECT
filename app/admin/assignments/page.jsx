@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-import { FileText, Calendar, Users, Eye, Edit, Trash2, Plus, Search, Filter } from "lucide-react"
+import { FileText, Calendar, Users, Eye, Edit, Trash2, Plus, Search, Filter, Clock, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 
@@ -17,6 +17,7 @@ export default function AdminAssignmentsPage() {
   const [courseFilter, setCourseFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState(null)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -37,7 +38,7 @@ export default function AdminAssignmentsPage() {
     try {
       const [assignmentsRes, coursesRes] = await Promise.all([
         axios.get('/api/admin/assignments'),
-        axios.get('/api/admin/courses')
+        axios.get('/api/courses')
       ])
       setAssignments(assignmentsRes.data)
       setCourses(coursesRes.data)
@@ -49,12 +50,18 @@ export default function AdminAssignmentsPage() {
     }
   }
 
-  const handleCreateAssignment = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await axios.post('/api/admin/assignments', formData)
-      toast.success('Assignment created successfully!')
+      if (editingAssignment) {
+        await axios.put(`/api/admin/assignments/${editingAssignment.id}`, formData)
+        toast.success('Assignment updated successfully!')
+      } else {
+        await axios.post('/api/admin/assignments', formData)
+        toast.success('Assignment created successfully!')
+      }
       setShowCreateForm(false)
+      setEditingAssignment(null)
       setFormData({
         title: '',
         description: '',
@@ -64,8 +71,20 @@ export default function AdminAssignmentsPage() {
       })
       loadData()
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to create assignment')
+      toast.error(error.response?.data?.error || 'Failed to save assignment')
     }
+  }
+
+  const handleEdit = (assignment) => {
+    setEditingAssignment(assignment)
+    setFormData({
+      title: assignment.title,
+      description: assignment.description || '',
+      courseId: assignment.courseId,
+      dueDate: assignment.dueDate ? new Date(assignment.dueDate).toISOString().slice(0, 16) : '',
+      maxPoints: assignment.maxPoints
+    })
+    setShowCreateForm(true)
   }
 
   const handleDelete = async (assignmentId) => {
@@ -126,7 +145,17 @@ export default function AdminAssignmentsPage() {
             <p className="text-gray-600">Monitor all course assignments and submissions</p>
           </div>
           <button
-            onClick={() => setShowCreateForm(true)}
+            onClick={() => {
+              setEditingAssignment(null)
+              setFormData({
+                title: '',
+                description: '',
+                courseId: '',
+                dueDate: '',
+                maxPoints: 100
+              })
+              setShowCreateForm(true)
+            }}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -256,13 +285,13 @@ export default function AdminAssignmentsPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Link>
-                          <Link
-                            href={`/admin/assignments/${assignment.id}/edit`}
+                          <button
+                            onClick={() => handleEdit(assignment)}
                             className="text-green-600 hover:text-green-900"
                             title="Edit Assignment"
                           >
                             <Edit className="h-4 w-4" />
-                          </Link>
+                          </button>
                           <button
                             onClick={() => handleDelete(assignment.id)}
                             className="text-red-600 hover:text-red-900"
@@ -320,12 +349,14 @@ export default function AdminAssignmentsPage() {
           </div>
         </div>
 
-        {/* Create Assignment Modal */}
+        {/* Create/Edit Assignment Modal */}
         {showCreateForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Assignment</h2>
-              <form onSubmit={handleCreateAssignment} className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                {editingAssignment ? 'Edit Assignment' : 'Create New Assignment'}
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                   <input
@@ -389,11 +420,14 @@ export default function AdminAssignmentsPage() {
                 
                 <div className="flex gap-2 pt-4">
                   <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-                    Create Assignment
+                    {editingAssignment ? 'Update Assignment' : 'Create Assignment'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowCreateForm(false)}
+                    onClick={() => {
+                      setShowCreateForm(false)
+                      setEditingAssignment(null)
+                    }}
                     className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
                   >
                     Cancel

@@ -34,9 +34,14 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(assignments)
+    // Ensure we always return a valid array
+    return NextResponse.json(assignments || [])
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error fetching assignments:', error)
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error.message || 'Unknown error'
+    }, { status: 500 })
   }
 }
 
@@ -47,15 +52,32 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { title, description, courseId, dueDate, maxPoints } = await request.json()
+    const body = await request.json()
+    const { title, description, courseId, dueDate, maxPoints } = body
+
+    // Validate required fields
+    if (!title || !courseId || !dueDate) {
+      return NextResponse.json({ 
+        error: 'Missing required fields: title, courseId, dueDate' 
+      }, { status: 400 })
+    }
+
+    // Verify course exists
+    const course = await prismaDB.course.findUnique({
+      where: { id: courseId }
+    })
+
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+    }
     
     const assignment = await prismaDB.assignment.create({
       data: {
         title,
-        description,
+        description: description || null,
         courseId,
         dueDate: new Date(dueDate),
-        maxPoints,
+        maxPoints: maxPoints || 100,
         createdById: session.user.id
       },
       include: {
@@ -74,6 +96,10 @@ export async function POST(request) {
     
     return NextResponse.json(assignment)
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    console.error('Error creating assignment:', error)
+    return NextResponse.json({ 
+      error: 'Failed to create assignment',
+      message: error.message || 'Unknown error'
+    }, { status: 500 })
   }
 }
