@@ -39,7 +39,7 @@ export default function CoursesPage() {
     <div className="max-w-xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Courses</h1>
       {session?.user?.role === 'admin' && (
-        <form onSubmit={addCourse} className="mb-6 space-y-2">
+        <form onSubmit={addCourse} className="mb-6 space-y-2 text-black">
           <input className="border p-2 rounded w-full" required value={title} onChange={e => setTitle(e.target.value)} placeholder="Course Title" />
           <input className="border p-2 rounded w-full" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
           <select className="border p-2 rounded w-full" value={skillId} onChange={e => setSkillId(e.target.value)}>
