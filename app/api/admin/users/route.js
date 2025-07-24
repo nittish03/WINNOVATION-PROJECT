@@ -1,23 +1,68 @@
+import { NextResponse } from 'next/server'
 import { prismaDB } from '@/lib/prismaDB'
-import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth"
+import { authOptions } from '@/lib/authOptions'
+import bcrypt from 'bcryptjs'
 
-export async function GET(req) {
+export async function GET() {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const users = await prismaDB.user.findMany({
-      include: {
-        enrollments: {
-          include: {
-            course: true,
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        university: true,
+        degree: true,
+        branch: true,
+        createdAt: true,
+        _count: {
+          select: {
+            enrollments: true,
+            certificates: true,
+            skills: true
+          }
+        }
       },
-    });
-    return NextResponse.json(users);
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(users)
   } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function POST(request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { name, email, role, university, degree, branch } = await request.json()
+    
+    const hashedPassword = await bcrypt.hash('password123', 10)
+    
+    const user = await prismaDB.user.create({
+      data: {
+        name,
+        email,
+        hashedPassword,
+        role,
+        university,
+        degree,
+        branch
+      }
+    })
+    
+    return NextResponse.json(user)
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
   }
 }

@@ -3,28 +3,18 @@ import { prismaDB } from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
 import { authOptions } from '@/lib/authOptions'
 
-export async function GET() {
+export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const courses = await prismaDB.course.findMany({
-      include: {
-        createdBy: { select: { name: true } },
-        skill: { select: { name: true, category: true } },
-        _count: {
-          select: {
-            enrollments: true,
-            assignments: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
+    await prismaDB.assignment.delete({
+      where: { id: params.id }
     })
     
-    return NextResponse.json(courses)
+    return NextResponse.json({ message: 'Assignment deleted successfully' })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

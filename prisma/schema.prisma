@@ -47,6 +47,7 @@ model User {
   degree            String?
   branch            String?
   role              String            @default("student")
+  
   accounts          Account[]
   sessions          Session[]
   skills            UserSkill[]
@@ -59,24 +60,6 @@ model User {
   gradedAssignments Grade[]           @relation("GradedBy")
   threads           DiscussionThread[]
   replies           DiscussionReply[]
-}
-
-model NonVerifiedUser {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  name           String
-  email          String   @unique
-  hashedPassword String
-  otp            Int
-  otpExpiry      DateTime
-}
-
-model VerificationToken {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 model Skill {
@@ -188,6 +171,8 @@ model Certificate {
   issuedAt  DateTime @default(now())
   url       String?
   title     String
+
+  @@unique([userId, courseId])
 }
 
 model DiscussionThread {
