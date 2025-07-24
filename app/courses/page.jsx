@@ -3,15 +3,17 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { BookOpen, Users, Plus, Award, Calendar } from "lucide-react";
+import { BookOpen, Users, Plus, Award, Calendar, User } from "lucide-react";
 import Link from "next/link";
 
 export default function CoursesPage() {
   const { data: session } = useSession();
   const [courses, setCourses] = useState([]);
   const [skills, setSkills] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [enrolling, setEnrolling] = useState({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -30,6 +32,12 @@ export default function CoursesPage() {
       ]);
       setCourses(coursesRes.data);
       setSkills(skillsRes.data);
+
+      // If student, load their enrollments
+      if (session?.user?.role === 'student') {
+        const enrollmentsRes = await axios.get('/api/enrollments');
+        setEnrollments(enrollmentsRes.data);
+      }
     } catch (error) {
       toast.error('Failed to load data');
       console.error(error);
@@ -52,13 +60,20 @@ export default function CoursesPage() {
   };
 
   const handleEnroll = async (courseId) => {
+    setEnrolling(prev => ({ ...prev, [courseId]: true }));
     try {
       await axios.post('/api/enrollments', { courseId });
       toast.success('Successfully enrolled!');
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to enroll');
+    } finally {
+      setEnrolling(prev => ({ ...prev, [courseId]: false }));
     }
+  };
+
+  const isEnrolled = (courseId) => {
+    return enrollments.some(enrollment => enrollment.courseId === courseId);
   };
 
   if (loading) return <div className="text-center py-8">Loading...</div>;
@@ -164,20 +179,20 @@ export default function CoursesPage() {
           <p className="mt-1 text-sm text-gray-500">
             {session?.user?.role === 'admin' 
               ? 'Create your first course to get started.'
-              : 'Check back later for new courses.'
+              : 'Courses will appear here when they become available.'
             }
           </p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
-            <div key={course.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div key={course.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center">
                     <BookOpen className="h-8 w-8 text-blue-600" />
                     <div className="ml-3">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-medium text-gray-900">
                         {course.title}
                       </h3>
                       {course.skill && (
@@ -191,14 +206,25 @@ export default function CoursesPage() {
                 </div>
 
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {course.description || 'No description available'}
+                  {course.description || 'No description available.'}
                 </p>
 
-                <div className="flex items-center text-sm text-gray-500 mb-4">
-                  <Users className="h-4 w-4 mr-1" />
-                  <span className="mr-4">{course._count?.enrollments || 0} enrolled</span>
-                  <Calendar className="h-4 w-4 mr-1" />
-                  <span>Created {new Date(course.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-1" />
+                    <span>{course.createdBy?.name || 'Unknown'}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="h-4 w-4 mr-1" />
+                    <span>{course._count?.enrollments || 0} enrolled</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>Created {new Date(course.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
 
                 <div className="flex space-x-2">
@@ -210,12 +236,21 @@ export default function CoursesPage() {
                   </Link>
                   
                   {session?.user?.role === 'student' && (
-                    <button
-                      onClick={() => handleEnroll(course.id)}
-                      className="bg-green-100 text-green-800 py-2 px-4 rounded-md text-sm font-medium hover:bg-green-200 transition-colors"
-                    >
-                      Enroll
-                    </button>
+                    <>
+                      {isEnrolled(course.id) ? (
+                        <div className="bg-green-100 text-green-800 py-2 px-3 rounded-md text-sm font-medium">
+                          Enrolled ✓
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleEnroll(course.id)}
+                          disabled={enrolling[course.id]}
+                          className="bg-green-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          {enrolling[course.id] ? 'Enrolling...' : 'Enroll'}
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -224,7 +259,7 @@ export default function CoursesPage() {
         </div>
       )}
 
-      {/* Course Statistics */}
+      {/* Quick Stats */}
       {courses.length > 0 && (
         <div className="mt-12 bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Course Statistics</h2>
@@ -243,19 +278,21 @@ export default function CoursesPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {new Set(courses.map(c => c.skillId).filter(Boolean)).size}
+                {new Set(courses.map(course => course.skill?.name).filter(Boolean)).size}
               </div>
-              <div className="text-sm text-gray-600">Skills Covered</div>
+              <div className="text-sm text-gray-600">Skill Categories</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {Math.round(courses.reduce((acc, course) => acc + (course._count?.enrollments || 0), 0) / courses.length) || 0}
+                {session?.user?.role === 'student' ? enrollments.length : courses.filter(c => c.publishedAt).length}
               </div>
-              <div className="text-sm text-gray-600">Avg Enrollments</div>
+              <div className="text-sm text-gray-600">
+                {session?.user?.role === 'student' ? 'My Enrollments' : 'Published'}
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
