@@ -1,35 +1,31 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { toast } from 'react-toastify'
-import axios from 'axios'
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function UserSkillsPage() {
-  const [userSkills, setUserSkills] = useState([])
-  const [skills, setSkills] = useState([])
-  const [skillId, setSkillId] = useState('')
-  const [level, setLevel] = useState(1)
+  const { data: session } = useSession();
+  const [userSkills, setUserSkills] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [skillId, setSkillId] = useState("");
+  const [level, setLevel] = useState(1);
 
   useEffect(() => {
-    axios.get('/api/user-skills').then(res => setUserSkills(res.data))
-    axios.get('/api/skills').then(res => setSkills(res.data))
-  }, [])
+    if (!session) return;
+    axios.get("/api/user-skills").then(r => setUserSkills(r.data));
+    axios.get("/api/skills").then(r => setSkills(r.data));
+  }, [session]);
 
   async function addUserSkill(e) {
-    e.preventDefault()
-    try {
-      const res = await axios.post('/api/user-skills', { skillId, level })
-      if (res.status === 200) {
-        toast.success('Skill Added/Updated!')
-        setSkillId('')
-        setLevel(1)
-        axios.get('/api/user-skills').then(res => setUserSkills(res.data))
-      } else {
-        toast.error('Error updating skill')
-      }
-    } catch (error) {
-      toast.error('Error updating skill')
-    }
+    e.preventDefault();
+    await axios.post("/api/user-skills", { skillId, level });
+    toast.success("Skill Level updated!");
+    setSkillId(""); setLevel(1);
+    axios.get("/api/user-skills").then(r => setUserSkills(r.data));
   }
+
+  if (session?.user?.role !== "student") return <div>Not allowed.</div>;
 
   return (
     <div className="max-w-xl mx-auto py-8">
@@ -49,5 +45,5 @@ export default function UserSkillsPage() {
         ))}
       </ul>
     </div>
-  )
+  );
 }

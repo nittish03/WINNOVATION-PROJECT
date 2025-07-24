@@ -1,45 +1,38 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { toast } from 'react-toastify'
-import axios from 'axios'
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function CoursesPage() {
-  const { data: session } = useSession()
-  const [courses, setCourses] = useState([])
-  const [skills, setSkills] = useState([])
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [skillId, setSkillId] = useState('')
+  const { data: session } = useSession();
+  const [courses, setCourses] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [skillId, setSkillId] = useState("");
 
   useEffect(() => {
-    axios.get('/api/skills').then(res => setSkills(res.data))
-    axios.get('/api/courses').then(res => setCourses(res.data))
-  }, [])
+    axios.get("/api/skills").then(res => setSkills(res.data));
+    axios.get("/api/courses").then(res => setCourses(res.data));
+  }, []);
 
   async function addCourse(e) {
-    e.preventDefault()
-    try {
-      const res = await axios.post('/api/courses', { title, description, skillId })
-      if (res.status === 200) {
-        toast.success('Course Added!')
-        setTitle('')
-        setDescription('')
-        setSkillId('')
-        axios.get('/api/courses').then(res => setCourses(res.data))
-      } else {
-        toast.error('Error adding course')
-      }
-    } catch (error) {
-      toast.error('Error adding course')
-    }
+    e.preventDefault();
+    await axios.post("/api/courses", { title, description, skillId })
+      .then(() => {
+        toast.success("Course Added!");
+        setTitle(""); setDescription(""); setSkillId("");
+        axios.get("/api/courses").then(res => setCourses(res.data));
+      })
+      .catch(err => toast.error(err.response?.data?.error || "Error adding course"));
   }
 
   return (
     <div className="max-w-xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Courses</h1>
-      {session?.user?.role === 'admin' && (
-        <form onSubmit={addCourse} className="mb-6 space-y-2 text-black">
+      {session?.user?.role === "admin" && (
+        <form onSubmit={addCourse} className="mb-6 space-y-2">
           <input className="border p-2 rounded w-full" required value={title} onChange={e => setTitle(e.target.value)} placeholder="Course Title" />
           <input className="border p-2 rounded w-full" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
           <select className="border p-2 rounded w-full" value={skillId} onChange={e => setSkillId(e.target.value)}>
@@ -57,5 +50,5 @@ export default function CoursesPage() {
         ))}
       </ul>
     </div>
-  )
+  );
 }

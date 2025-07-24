@@ -87,14 +87,19 @@ export default function Navbar() {
             <Link href="/" className="flex items-center">
             {
               session?.user?.image && (
-                               <Image
-                src={session?.user?.image}
-                width={48}
-                height={48}
-                alt="Profile"
-                className="rounded-full w-12 h-12 object-cover bg-gray-200 border-2 border-blue-500"
-                priority
-              /> 
+<div className="flex justify-center items-center">
+  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-500 bg-gray-200">
+    <Image
+      src={`/api/image-proxy?url=${encodeURIComponent(session?.user?.image)}`}
+      alt="Profile"
+      width={48}
+      height={48}
+      className="w-full h-full object-cover object-center"
+      priority
+    />
+  </div>
+</div>
+
               )
             }
 
