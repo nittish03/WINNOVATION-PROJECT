@@ -4,22 +4,31 @@ import { getServerSession } from "next-auth"
 import { authOptions } from '@/lib/authOption'
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const certificates = await prismaDB.certificate.findMany({
-      where: { userId: session.user.id },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
         course: {
           select: {
-            title: true,
-            skill: { select: { name: true, category: true } }
+            id: true,
+            title: true
           }
         }
       },
       orderBy: { issuedAt: 'desc' }
     })
+
     return NextResponse.json(certificates)
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
