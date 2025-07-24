@@ -46,6 +46,7 @@ model User {
   university     String?
   degree         String?
   branch         String?
+  role           String    @default("user")
   accounts       Account[]
   sessions       Session[]
   skills         UserSkill[]
