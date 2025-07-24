@@ -10,10 +10,14 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const assignmentId = resolvedParams.id
+
     const submission = await prismaDB.submission.findUnique({
       where: {
         assignmentId_userId: {
-          assignmentId: params.id,
+          assignmentId: assignmentId,
           userId: session.user.id
         }
       }
@@ -33,6 +37,10 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const assignmentId = resolvedParams.id
+
     const { content, fileUrl } = await request.json()
 
     if (!content?.trim()) {
@@ -41,7 +49,7 @@ export async function POST(request, { params }) {
 
     // Check if assignment exists and user is enrolled
     const assignment = await prismaDB.assignment.findUnique({
-      where: { id: params.id }
+      where: { id: assignmentId }
     })
 
     if (!assignment) {
@@ -65,7 +73,7 @@ export async function POST(request, { params }) {
     const submission = await prismaDB.submission.upsert({
       where: {
         assignmentId_userId: {
-          assignmentId: params.id,
+          assignmentId: assignmentId,
           userId: session.user.id
         }
       },
@@ -75,7 +83,7 @@ export async function POST(request, { params }) {
         submittedAt: new Date()
       },
       create: {
-        assignmentId: params.id,
+        assignmentId: assignmentId,
         userId: session.user.id,
         content,
         fileUrl: fileUrl || null

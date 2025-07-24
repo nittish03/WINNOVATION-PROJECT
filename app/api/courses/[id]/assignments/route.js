@@ -7,8 +7,12 @@ export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
     
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const courseId = resolvedParams.id
+
     const assignments = await prismaDB.assignment.findMany({
-      where: { courseId: params.id },
+      where: { courseId: courseId },
       include: session?.user?.role === 'student' ? {
         submissions: {
           where: { userId: session.user.id },

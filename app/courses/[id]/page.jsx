@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from "react"
+import { use } from "react" // Add this import
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -23,6 +24,10 @@ import Link from "next/link"
 import { toast } from "react-toastify"
 
 export default function CourseDetailPage({ params }) {
+  // Unwrap params using React.use()
+  const resolvedParams = use(params)
+  const courseId = resolvedParams.id
+
   const { data: session } = useSession()
   const router = useRouter()
   const [course, setCourse] = useState(null)
@@ -34,21 +39,21 @@ export default function CourseDetailPage({ params }) {
 
   useEffect(() => {
     if (!session) {
-      router.push('/login')
+      router.push('/auth/signin')
       return
     }
     loadCourseData()
-  }, [session, params.id, router])
+  }, [session, courseId, router])
 
   const loadCourseData = async () => {
     try {
       const [courseRes, enrollmentRes, assignmentsRes, discussionsRes] = await Promise.all([
-        axios.get(`/api/courses/${params.id}`),
+        axios.get(`/api/courses/${courseId}`),
         session?.user?.role === 'student' 
-          ? axios.get(`/api/courses/${params.id}/enrollment`).catch(() => ({ data: null }))
+          ? axios.get(`/api/courses/${courseId}/enrollment`).catch(() => ({ data: null }))
           : Promise.resolve({ data: null }),
-        axios.get(`/api/courses/${params.id}/assignments`).catch(() => ({ data: [] })),
-        axios.get(`/api/courses/${params.id}/discussions`).catch(() => ({ data: [] }))
+        axios.get(`/api/courses/${courseId}/assignments`).catch(() => ({ data: [] })),
+        axios.get(`/api/courses/${courseId}/discussions`).catch(() => ({ data: [] }))
       ])
 
       setCourse(courseRes.data)
@@ -76,7 +81,7 @@ export default function CourseDetailPage({ params }) {
 
     setEnrolling(true)
     try {
-      await axios.post('/api/enrollments', { courseId: params.id })
+      await axios.post('/api/enrollments', { courseId: courseId })
       toast.success('Successfully enrolled!')
       loadCourseData()
     } catch (error) {
@@ -323,7 +328,7 @@ export default function CourseDetailPage({ params }) {
                 </h2>
                 {enrollment && (
                   <Link
-                    href={`/discussions?course=${params.id}`}
+                    href={`/discussions?course=${courseId}`}
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     View All

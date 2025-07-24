@@ -10,6 +10,10 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const userSkillId = resolvedParams.id
+
     const { level } = await request.json()
     
     if (typeof level !== 'number' || level < 1 || level > 10) {
@@ -18,7 +22,7 @@ export async function PATCH(request, { params }) {
 
     // Verify user owns this skill
     const userSkill = await prismaDB.userSkill.findUnique({
-      where: { id: params.id }
+      where: { id: userSkillId }
     })
 
     if (!userSkill || userSkill.userId !== session.user.id) {
@@ -26,7 +30,7 @@ export async function PATCH(request, { params }) {
     }
 
     const updatedUserSkill = await prismaDB.userSkill.update({
-      where: { id: params.id },
+      where: { id: userSkillId },
       data: { level },
       include: {
         skill: {
@@ -54,9 +58,13 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const userSkillId = resolvedParams.id
+
     // Verify user owns this skill
     const userSkill = await prismaDB.userSkill.findUnique({
-      where: { id: params.id }
+      where: { id: userSkillId }
     })
 
     if (!userSkill || userSkill.userId !== session.user.id) {
@@ -64,7 +72,7 @@ export async function DELETE(request, { params }) {
     }
 
     await prismaDB.userSkill.delete({
-      where: { id: params.id }
+      where: { id: userSkillId }
     })
 
     return NextResponse.json({ message: 'User skill deleted successfully' })

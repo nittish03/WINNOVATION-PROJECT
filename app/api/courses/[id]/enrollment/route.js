@@ -10,11 +10,15 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const courseId = resolvedParams.id
+
     const enrollment = await prismaDB.enrollment.findUnique({
       where: {
         userId_courseId: {
           userId: session.user.id,
-          courseId: params.id
+          courseId: courseId
         }
       }
     })

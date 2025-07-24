@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from "react"
+import { use } from "react" // Add this import
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -22,6 +23,10 @@ import Link from "next/link"
 import { toast } from "react-toastify"
 
 export default function AssignmentDetailPage({ params }) {
+  // Unwrap params using React.use()
+  const resolvedParams = use(params)
+  const assignmentId = resolvedParams.id
+
   const { data: session } = useSession()
   const router = useRouter()
   const [assignment, setAssignment] = useState(null)
@@ -33,21 +38,21 @@ export default function AssignmentDetailPage({ params }) {
 
   useEffect(() => {
     if (!session) {
-      router.push('/login')
+      router.push('/auth/signin')
       return
     }
     loadAssignmentData()
-  }, [session, params.id, router])
+  }, [session, assignmentId, router])
 
   const loadAssignmentData = async () => {
     try {
       const [assignmentRes, submissionRes, gradeRes] = await Promise.all([
-        axios.get(`/api/assignments/${params.id}`),
+        axios.get(`/api/assignments/${assignmentId}`),
         session?.user?.role === 'student' 
-          ? axios.get(`/api/assignments/${params.id}/submission`).catch(() => ({ data: null }))
+          ? axios.get(`/api/assignments/${assignmentId}/submission`).catch(() => ({ data: null }))
           : Promise.resolve({ data: null }),
         session?.user?.role === 'student' 
-          ? axios.get(`/api/assignments/${params.id}/grade`).catch(() => ({ data: null }))
+          ? axios.get(`/api/assignments/${assignmentId}/grade`).catch(() => ({ data: null }))
           : Promise.resolve({ data: null })
       ])
 
@@ -81,7 +86,7 @@ export default function AssignmentDetailPage({ params }) {
 
     setSubmitting(true)
     try {
-      await axios.post(`/api/assignments/${params.id}/submission`, {
+      await axios.post(`/api/assignments/${assignmentId}/submission`, {
         content: submissionText
       })
       toast.success('Assignment submitted successfully!')

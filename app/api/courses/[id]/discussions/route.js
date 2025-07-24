@@ -3,8 +3,12 @@ import { prismaDB } from '@/lib/prismaDB'
 
 export async function GET(request, { params }) {
   try {
+    // Await params before accessing its properties
+    const resolvedParams = await params
+    const courseId = resolvedParams.id
+
     const discussions = await prismaDB.discussionThread.findMany({
-      where: { courseId: params.id },
+      where: { courseId: courseId },
       include: {
         author: {
           select: {

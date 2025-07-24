@@ -131,12 +131,9 @@ export default function ProfilePage() {
               >
                 <div className="relative">
                   <img
-                    src={profile.image || '/avatar.png'}
+                    src={profile.image}
                     alt="Profile"
                     className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg"
-                    onError={(e) => {
-                      e.target.src = '/avatar.png'
-                    }}
                   />
                   <div className="absolute inset-0 w-32 h-32 rounded-full bg-gradient-to-tr from-blue-500/20 to-purple-500/20"></div>
                   <motion.div
