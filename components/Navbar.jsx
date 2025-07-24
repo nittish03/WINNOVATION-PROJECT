@@ -15,7 +15,9 @@ import {
   BarChart3, 
   FileText, 
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Target,
+  Settings
 } from "lucide-react"
 
 export default function NavBar() {
@@ -42,10 +44,11 @@ export default function NavBar() {
 
   const studentLinks = [
     { href: "/dashboard", label: "Dashboard", icon: BarChart3, color: "from-blue-500 to-purple-500" },
-    { href: "/skills", label: "Skills", icon: Award, color: "from-emerald-500 to-teal-500" },
+    { href: "/skills", label: "Browse Skills", icon: Award, color: "from-emerald-500 to-teal-500" },
+    { href: "/user-skills", label: "My Skills", icon: Target, color: "from-indigo-500 to-purple-500" },
     { href: "/courses", label: "Courses", icon: BookOpen, color: "from-orange-500 to-red-500" },
     { href: "/my-courses", label: "My Courses", icon: BookOpen, color: "from-pink-500 to-rose-500" },
-    { href: "/assignments", label: "Assignments", icon: FileText, color: "from-indigo-500 to-blue-500" },
+    { href: "/assignments", label: "Assignments", icon: FileText, color: "from-violet-500 to-blue-500" },
     { href: "/certificates", label: "Certificates", icon: Award, color: "from-yellow-500 to-orange-500" },
     { href: "/discussions", label: "Discussions", icon: MessageSquare, color: "from-purple-500 to-pink-500" },
   ]
@@ -56,10 +59,23 @@ export default function NavBar() {
     { href: "/admin/skills", label: "Manage Skills", icon: Award, color: "from-emerald-500 to-green-500" },
     { href: "/admin/courses", label: "Manage Courses", icon: BookOpen, color: "from-orange-500 to-amber-500" },
     { href: "/admin/assignments", label: "Assignments", icon: FileText, color: "from-red-500 to-pink-500" },
-    { href: "/admin/analytics", label: "Analytics", icon: BarChart3, color: "from-teal-500 to-cyan-500" },
+    { href: "/admin/analytics", label: "Analytics", icon: Settings, color: "from-teal-500 to-cyan-500" },
   ]
 
-  const links = session?.user?.role === "admin" ? adminLinks : studentLinks
+  const instructorLinks = [
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3, color: "from-blue-500 to-purple-500" },
+    { href: "/courses", label: "My Courses", icon: BookOpen, color: "from-green-500 to-teal-500" },
+    { href: "/assignments", label: "Assignments", icon: FileText, color: "from-purple-500 to-pink-500" },
+    { href: "/discussions", label: "Discussions", icon: MessageSquare, color: "from-orange-500 to-red-500" },
+  ]
+
+  const getLinks = () => {
+    if (session?.user?.role === "admin") return adminLinks
+    if (session?.user?.role === "instructor") return instructorLinks
+    return studentLinks
+  }
+
+  const links = getLinks()
 
   return (
     <>
@@ -73,15 +89,16 @@ export default function NavBar() {
             : 'bg-white/95 backdrop-blur-md shadow-lg'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="">
           <div className="flex justify-between items-center h-16">
 
 
+
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center max-w-4xl mx-8">
+            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center ">
               {session && (
                 <AnimatePresence>
-                  <div className="flex items-center space-x-1 overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center space-x-1 overflow-x-hidden scrollbar-hide">
                     {links.map((link, index) => {
                       const Icon = link.icon
                       const isActive = pathname === link.href
@@ -153,6 +170,8 @@ export default function NavBar() {
             {/* User Menu */}
             <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
               {session ? (
+            <Link href={"/profile"}>
+
                 <div className="flex items-center space-x-3">
                   {/* Animated User Profile */}
                   <motion.div
@@ -180,19 +199,24 @@ export default function NavBar() {
                       <motion.span
                         className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                           session.user.role === "admin" 
-                            ? "bg-red-100 text-red-800" 
+                            ? "bg-red-100 text-red-800"
+                            : session.user.role === "instructor"
+                            ? "bg-blue-100 text-blue-800" 
                             : "bg-green-100 text-green-800"
                         }`}
                         whileHover={{ scale: 1.05 }}
                       >
-                        {session.user.role === "admin" ? "Admin" : "Student"}
+                        {session.user.role === "admin" ? "Admin" : 
+                         session.user.role === "instructor" ? "Instructor" : "Student"}
                       </motion.span>
                     </div>
                   </motion.div>
 
+
+
                   {/* Animated Logout Button */}
                   <motion.button
-                    onClick={() => signOut({ callbackUrl: '/signup' })}
+                    onClick={() => signOut({ callbackUrl: '/login' })}
                     className="flex items-center space-x-1.5 px-3 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -206,6 +230,8 @@ export default function NavBar() {
                     <span className="text-sm font-medium hidden xl:block">Logout</span>
                   </motion.button>
                 </div>
+                            </Link>
+
               ) : (
                 /* Guest Navigation with Animations */
                 <div className="flex items-center space-x-2">
@@ -219,7 +245,7 @@ export default function NavBar() {
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
-                      href="/singup"
+                      href="/signup"
                       className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
                     >
                       Sign Up
@@ -293,14 +319,19 @@ export default function NavBar() {
                           {session.user.name || session.user.email}
                         </div>
                         <div className="text-xs text-gray-500 truncate">
-                          {session.user.university || 'Student Portal'}
+                          {session.user.university || 
+                           (session.user.role === 'admin' ? 'Admin Panel' :
+                            session.user.role === 'instructor' ? 'Instructor Portal' : 'Student Portal')}
                         </div>
                         <span className={`inline-block mt-1 px-2 py-1 text-xs rounded-full font-medium ${
                           session.user.role === "admin" 
-                            ? "bg-red-100 text-red-800" 
+                            ? "bg-red-100 text-red-800"
+                            : session.user.role === "instructor"
+                            ? "bg-blue-100 text-blue-800" 
                             : "bg-green-100 text-green-800"
                         }`}>
-                          {session.user.role === "admin" ? "Admin" : "Student"}
+                          {session.user.role === "admin" ? "Admin" : 
+                           session.user.role === "instructor" ? "Instructor" : "Student"}
                         </span>
                       </div>
                     </motion.div>
@@ -335,16 +366,32 @@ export default function NavBar() {
                       })}
                     </div>
 
+                    {/* Mobile Profile Link */}
+                    <motion.div
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.05 * (links.length + 2) }}
+                    >
+                      <Link
+                        href="/profile"
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="h-5 w-5 flex-shrink-0" />
+                        <span>Profile Settings</span>
+                      </Link>
+                    </motion.div>
+
                     {/* Mobile Logout */}
                     <motion.button
                       onClick={() => {
                         signOut({ callbackUrl: '/login' })
                         setIsOpen(false)
                       }}
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all duration-300"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all duration-300 mt-2"
                       initial={{ x: -50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.05 * (links.length + 3) }}
+                      transition={{ delay: 0.05 * (links.length + 4) }}
                     >
                       <LogOut className="h-5 w-5 flex-shrink-0" />
                       <span>Logout</span>
@@ -372,7 +419,7 @@ export default function NavBar() {
                       transition={{ delay: 0.2 }}
                     >
                       <Link
-                        href="/signup"
+                        href="/singup"
                         className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-xl text-base font-medium transition-all duration-300 shadow-lg text-center"
                         onClick={() => setIsOpen(false)}
                       >

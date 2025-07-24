@@ -1,0 +1,90 @@
+import { NextResponse } from 'next/server'
+import { prismaDB } from '@/lib/prismaDB'
+import { getServerSession } from "next-auth"
+import { authOptions } from '@/lib/authOptions'
+
+export async function GET(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'student') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const submission = await prismaDB.submission.findUnique({
+      where: {
+        assignmentId_userId: {
+          assignmentId: params.id,
+          userId: session.user.id
+        }
+      }
+    })
+
+    return NextResponse.json(submission)
+  } catch (error) {
+    console.error('Error fetching submission:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'student') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { content, fileUrl } = await request.json()
+
+    if (!content?.trim()) {
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
+    }
+
+    // Check if assignment exists and user is enrolled
+    const assignment = await prismaDB.assignment.findUnique({
+      where: { id: params.id }
+    })
+
+    if (!assignment) {
+      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
+    }
+
+    const enrollment = await prismaDB.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId: assignment.courseId
+        }
+      }
+    })
+
+    if (!enrollment) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+    }
+
+    // Create or update submission
+    const submission = await prismaDB.submission.upsert({
+      where: {
+        assignmentId_userId: {
+          assignmentId: params.id,
+          userId: session.user.id
+        }
+      },
+      update: {
+        content,
+        fileUrl: fileUrl || null,
+        submittedAt: new Date()
+      },
+      create: {
+        assignmentId: params.id,
+        userId: session.user.id,
+        content,
+        fileUrl: fileUrl || null
+      }
+    })
+
+    return NextResponse.json(submission)
+  } catch (error) {
+    console.error('Error creating submission:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

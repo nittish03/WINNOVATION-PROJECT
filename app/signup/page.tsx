@@ -1,6 +1,6 @@
 'use client'
 
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { redirect } from 'next/navigation';
 import axios from 'axios';
 import { signIn, useSession } from 'next-auth/react';
@@ -22,9 +22,11 @@ import { FaWandMagicSparkles } from 'react-icons/fa6';
 const SignUpPage = () => {
   const router = useRouter();
   const {data : session} = useSession();
-  if(session){
-    router.push("/")
-  }
+  useEffect(()=>{
+    if(session){
+      router.push("/")
+    }
+  },[session])
   const [otp, setOtp] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prismaDB } from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
-import { authOptions } from '@/lib/authOption'
+import { authOptions } from '@/lib/authOptions'
 
 export async function GET() {
   try {
@@ -20,7 +20,9 @@ export async function GET() {
         university: true,
         degree: true,
         branch: true,
-        role: true
+        role: true,
+        createdAt: true,
+        updatedAt: true
       }
     })
 
@@ -30,7 +32,8 @@ export async function GET() {
 
     return NextResponse.json(user)
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error fetching profile:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -50,7 +53,8 @@ export async function PATCH(request) {
         university: university || null,
         degree: degree || null,
         branch: branch || null,
-        image: image || null
+        image: image || null,
+        updatedAt: new Date()
       },
       select: {
         id: true,
@@ -60,12 +64,15 @@ export async function PATCH(request) {
         university: true,
         degree: true,
         branch: true,
-        role: true
+        role: true,
+        createdAt: true,
+        updatedAt: true
       }
     })
 
     return NextResponse.json(updatedUser)
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    console.error('Error updating profile:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from "react-icons/fc";
 import { signIn,useSession } from 'next-auth/react';
@@ -35,9 +35,11 @@ const LoginPage = () => {
       toast.error("Failed to Log in, please try again");
     }
   };
-  if(session){
-    router.push("/")
-  }
+  useEffect(()=>{
+    if(session){
+      router.push("/")
+    }
+  },[session])
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
