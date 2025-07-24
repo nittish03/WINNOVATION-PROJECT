@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  university     String?
+  degree         String?
+  branch         String?
+  accounts       Account[]
+  sessions       Session[]
+  skills         UserSkill[]
+  courses        Course[]
+  enrollments    Enrollment[]
+  certificates   Certificate[]
+}
+
+model NonVerifiedUser {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  email          String @unique
+  hashedPassword String
+  otp            Int
+  otpExpiry      DateTime
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Skill {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String     @unique
+  description String?
+  users       UserSkill[]
+  courses     Course[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model UserSkill {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  skillId   String   @db.ObjectId
+  level     Int
+  addedAt   DateTime @default(now())
+}
+
+model Course {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  skill       Skill?   @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  skillId     String?  @db.ObjectId
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String   @db.ObjectId
+  enrollments Enrollment[]
+  certificates Certificate[]
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Enrollment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @db.ObjectId
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId   String   @db.ObjectId
+  status     String
+  completedAt DateTime?
+  enrolledAt DateTime @default(now())
+}
+
+model Certificate {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId  String   @db.ObjectId
+  issuedAt  DateTime @default(now())
+  url       String?
+}

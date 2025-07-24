@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inria+Sans:wght@400;700&family=Inter:wght@400;500;700&family=Koho:wght@400&family=Itim&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.custom-shadow {
+    box-shadow: 0 0 15px white;
+}
+
+@layer base {
+  :root {
+        --radius: 0.5rem;
+    }
+}

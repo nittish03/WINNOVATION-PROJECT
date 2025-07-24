@@ -1,0 +1,19 @@
+import { NextResponse } from 'next/server'
+import prisma from '@/utils/prisma'
+
+export async function GET() {
+  const courses = await prisma.course.findMany({ include: { skill: true } })
+  return NextResponse.json(courses)
+}
+
+export async function POST(request) {
+  const { title, description, skillId, createdById } = await request.json()
+  try {
+    const course = await prisma.course.create({
+      data: { title, description, skillId, createdById }
+    })
+    return NextResponse.json(course)
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+}
