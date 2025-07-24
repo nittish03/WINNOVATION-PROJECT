@@ -61,6 +61,7 @@ model User {
   threads           DiscussionThread[]
   replies           DiscussionReply[]
 }
+
 model NonVerifiedUser {
   id             String @id @default(auto()) @map("_id") @db.ObjectId
   name           String
@@ -145,7 +146,7 @@ model Assignment {
   updatedAt   DateTime     @updatedAt
 
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdBy   User         @relation(fields: [createdById], references: [id])
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
   submissions Submission[]
   grades      Grade[]
 }
@@ -175,7 +176,7 @@ model Grade {
 
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gradedBy   User       @relation("GradedBy", fields: [gradedById], references: [id])
+  gradedBy   User       @relation("GradedBy", fields: [gradedById], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, userId])
 }
@@ -202,8 +203,8 @@ model DiscussionThread {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
-  course  Course?           @relation(fields: [courseId], references: [id])
-  author  User              @relation(fields: [authorId], references: [id])
+  course  Course?           @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  author  User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
   replies DiscussionReply[]
 }
 
@@ -215,5 +216,5 @@ model DiscussionReply {
   createdAt DateTime @default(now())
 
   thread DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  author User             @relation(fields: [authorId], references: [id])
+  author User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
