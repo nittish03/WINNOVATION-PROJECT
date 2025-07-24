@@ -19,6 +19,7 @@ import {
   Target,
   Settings
 } from "lucide-react"
+import Image from "next/image"
 
 export default function NavBar() {
   const { data: session } = useSession()
@@ -183,7 +184,20 @@ export default function NavBar() {
                       whileHover={{ rotate: 360 }}
                       transition={{ duration: 0.8 }}
                     >
-                      <User className="h-3 w-3 text-white" />
+                      {
+                        session?.user?.image ?<>
+<Image 
+  src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
+  alt="User profile"
+  height={100}
+  width={100}
+/>
+
+                          </>:<>
+                          <User className="h-3 w-3 text-white" />
+                          </>
+                        
+                      }
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full"
                         animate={{ translateX: ['100%', '-100%'] }}
