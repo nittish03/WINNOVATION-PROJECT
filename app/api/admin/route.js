@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prismaDB } from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
-import { authOptions } from '@/lib/authOption'
+import { authOptions } from '@/lib/authOptions'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request) {
