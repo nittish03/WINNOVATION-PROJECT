@@ -37,6 +37,11 @@ export default function AdminAssignmentDetailPage() {
     feedback: ''
   })
 
+  // Bulk Grade functionality states
+  const [showBulkGradeModal, setShowBulkGradeModal] = useState(false);
+  const [bulkGradeData, setBulkGradeData] = useState({});
+  const [bulkGradeLoading, setBulkGradeLoading] = useState(false);
+
   useEffect(() => {
     if (!session || session.user.role !== 'admin') {
       router.push('/dashboard')
@@ -135,6 +140,55 @@ export default function AdminAssignmentDetailPage() {
       setGradeLoading(false)
     }
   }
+
+  const handleBulkGradeClick = () => {
+    const pendingSubmissions = submissions.filter(s => !s.grade);
+    if (pendingSubmissions.length === 0) {
+      toast.info('No pending submissions to grade');
+      return;
+    }
+    const initialGrades = pendingSubmissions.reduce((acc, sub) => {
+      acc[sub.id] = { points: '', feedback: '' };
+      return acc;
+    }, {});
+    setBulkGradeData(initialGrades);
+    setShowBulkGradeModal(true);
+  };
+
+  const handleBulkGradeSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setBulkGradeLoading(true);
+      const gradesToSubmit = Object.entries(bulkGradeData)
+        .filter(([_, grade]) => grade.points !== '')
+        .map(([submissionId, grade]) => {
+          const submission = submissions.find(s => s.id === submissionId);
+          return {
+            assignmentId: assignment.id,
+            userId: submission.userId,
+            points: parseInt(grade.points),
+            feedback: grade.feedback,
+          };
+        });
+
+      if (gradesToSubmit.length === 0) {
+        toast.info('No grades were entered.');
+        return;
+      }
+
+      await axios.post('/api/admin/grades/bulk', { grades: gradesToSubmit });
+
+      setShowBulkGradeModal(false);
+      setBulkGradeData({});
+      toast.success('Grades submitted successfully!');
+      loadAssignmentData();
+    } catch (error) {
+      console.error('Error submitting bulk grades:', error);
+      toast.error(error.response?.data?.error || 'Failed to submit grades');
+    } finally {
+      setBulkGradeLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -324,16 +378,7 @@ export default function AdminAssignmentDetailPage() {
                   Edit Assignment
                 </button>
                 <button
-                  onClick={() => {
-                    // Quick grade all pending submissions
-                    const pendingSubmissions = submissions.filter(s => !s.grade)
-                    if (pendingSubmissions.length === 0) {
-                      toast.info('No pending submissions to grade')
-                      return
-                    }
-                    // You could implement bulk grading here
-                    toast.info('Click individual star icons to grade submissions')
-                  }}
+                  onClick={handleBulkGradeClick}
                   className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 flex items-center justify-center"
                 >
                   <Star className="h-4 w-4 mr-2" />
@@ -512,6 +557,97 @@ export default function AdminAssignmentDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowGradeModal(false)}
+                    className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Grade Submission Modal */}
+        {showBulkGradeModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Bulk Grade Submissions
+                </h2>
+                <button
+                  onClick={() => setShowBulkGradeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <form onSubmit={handleBulkGradeSubmit}>
+                <div className="space-y-4">
+                  {submissions.filter(s => !s.grade).map(submission => (
+                    <div key={submission.id} className="border border-gray-200 rounded-lg p-4 grid grid-cols-3 gap-4 items-start">
+                      <div className="col-span-1">
+                        <p className="font-medium text-gray-900">{submission.user?.name}</p>
+                        <p className="text-sm text-gray-700 mt-2">{submission.content}</p>
+                        {submission.fileUrl && (
+                          <div className="mt-2">
+                            <Link
+                              href={submission.fileUrl}
+                              target="_blank"
+                              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              View Attachment
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Points (Max: {assignment.maxPoints})
+                          </label>
+                          <input
+                            type="number"
+                            value={bulkGradeData[submission.id]?.points || ''}
+                            onChange={(e) => setBulkGradeData({ ...bulkGradeData, [submission.id]: { ...bulkGradeData[submission.id], points: e.target.value } })}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                            min="0"
+                            max={assignment.maxPoints}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Feedback</label>
+                          <textarea
+                            value={bulkGradeData[submission.id]?.feedback || ''}
+                            onChange={(e) => setBulkGradeData({ ...bulkGradeData, [submission.id]: { ...bulkGradeData[submission.id], feedback: e.target.value } })}
+                            rows={2}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
+                            placeholder="Provide feedback..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-4 mt-4">
+                  <button
+                    type="submit"
+                    disabled={bulkGradeLoading}
+                    className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {bulkGradeLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Submit All Grades
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkGradeModal(false)}
                     className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
                   >
                     Cancel
