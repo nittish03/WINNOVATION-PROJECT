@@ -95,8 +95,8 @@ export default function NavBar() {
             <div className="hidden lg:flex items-center justify-center ">
               {session && (
                 <AnimatePresence>
-                  <div className="flex items-center gap-2 space-x-1 overflow-hidden">
-              <Link href="/" className="font-extrabold text-2xl bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Winnovation</Link>
+                  <div className="flex items-center gap-2  overflow-hidden">
+              <Link href="/" className="font-extrabold text-lg bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Winnovation</Link>
 
                     {links.map((link, index) => {
                       const Icon = link.icon
@@ -113,7 +113,7 @@ export default function NavBar() {
                         >
                           <Link
                             href={link.href}
-                            className={`relative flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 overflow-hidden group whitespace-nowrap ${
+                            className={`relative flex items-center px-2 py-2 rounded-xl font-medium transition-all duration-300 overflow-hidden group whitespace-nowrap text-xs ${
                               isActive
                                 ? 'text-white shadow-lg transform scale-105'
                                 : 'text-gray-700 hover:text-gray-400 hover:shadow-md hover:scale-105'
@@ -226,6 +226,8 @@ export default function NavBar() {
                     >
                       <LogOut className="h-4 w-4" />
                     </motion.div>
+                    
+                    
                     <span className="text-sm font-medium hidden xl:block">Logout</span>
                   </motion.button>
                 </div>

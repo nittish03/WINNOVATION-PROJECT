@@ -3,9 +3,8 @@ import { prismaDB } from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
 import { authOptions } from '@/lib/authOptions'
 
-export async function GET(request, context) {
+export async function GET(request, { params }) {
   try {
-    const { params } = context;
     const { id } = await params;
 
     if (!id) {
@@ -84,9 +83,8 @@ export async function GET(request, context) {
   }
 }
 
-export async function PUT(request, context) {
+export async function PUT(request, { params }) {
   try {
-    const { params } = context;
     const { id } = await params;
 
     if (!id) {
@@ -143,9 +141,8 @@ export async function PUT(request, context) {
   }
 }
 
-export async function DELETE(request, context) {
+export async function DELETE(request, { params }) {
   try {
-    const { params } = context;
     const { id } = await params;
 
     if (!id) {

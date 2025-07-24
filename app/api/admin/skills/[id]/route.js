@@ -11,9 +11,10 @@ export async function PUT(request, { params }) {
     }
 
     const { name, description, category } = await request.json()
+    const { id } = await params;
     
     const skill = await prismaDB.skill.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         name,
         description,
@@ -34,8 +35,9 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params;
     await prismaDB.skill.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
     
     return NextResponse.json({ message: 'Skill deleted successfully' })

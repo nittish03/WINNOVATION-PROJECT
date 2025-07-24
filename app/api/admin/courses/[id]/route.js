@@ -11,9 +11,10 @@ export async function PATCH(request, { params }) {
     }
 
     const { publishedAt } = await request.json()
+    const { id } = await params;
     
     const course = await prismaDB.course.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { publishedAt }
     })
     
@@ -30,8 +31,9 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params;
     await prismaDB.course.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
     
     return NextResponse.json({ message: 'Course deleted successfully' })
