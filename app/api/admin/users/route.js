@@ -45,9 +45,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { name, email, role, university, degree, branch } = await request.json()
+    const { name, email, password, role } = await request.json()
+
+    if (!name || !email || !password || !role) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const existingUser = await prismaDB.user.findUnique({
+      where: { email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 })
+    }
     
-    const hashedPassword = await bcrypt.hash('password123', 10)
+    const hashedPassword = await bcrypt.hash(password, 10)
     
     const user = await prismaDB.user.create({
       data: {
@@ -55,14 +67,12 @@ export async function POST(request) {
         email,
         hashedPassword,
         role,
-        university,
-        degree,
-        branch
       }
     })
     
     return NextResponse.json(user)
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    console.error("Error creating user:", error)
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
   }
 }
