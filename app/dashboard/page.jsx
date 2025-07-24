@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   if (status === 'loading') return <div>Loading...</div>
   if (!session) return <div>Please sign in.</div>
-
+  console.log("session"+session)
   return (
     <div className="py-8">
       <h1 className="text-2xl font-bold mb-4">Welcome, {profile?.name || session.user.email}</h1>

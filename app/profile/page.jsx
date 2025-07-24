@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
+import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
+    const router = useRouter();
   const { data: session, status } = useSession()
   const [profile, setProfile] = useState(null)
   const [edit, setEdit] = useState(false)
@@ -33,6 +35,7 @@ export default function ProfilePage() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
+
   async function saveProfile(e) {
     e.preventDefault()
     const res = await fetch('/api/profile', {
@@ -50,7 +53,13 @@ export default function ProfilePage() {
   }
 
   if (status === 'loading') return <div>Loading...</div>
-  if (!session) return <div>Please sign in.</div>
+  if (!session) return <>
+  <div>Please sign in.</div>
+  <button onClick={()=>{
+    router.push("/login")
+  }}>Sign in</button>
+  </>
+                        
   if (!profile) return <div>Loading profile...</div>
 
   return (
