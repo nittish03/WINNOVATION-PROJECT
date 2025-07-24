@@ -83,7 +83,7 @@ export default function NavBar() {
         ref={navRef}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500${
+        className={`sticky top-0 px-4 left-0 right-0 z-50 transition-all duration-500${
           scrolled 
             ? 'bg-white/90 backdrop-blur-xl shadow-2xl border-b border-gray-200/50' 
             : 'bg-white/95 backdrop-blur-md shadow-lg'
@@ -91,14 +91,13 @@ export default function NavBar() {
       >
         <div className="">
           <div className="flex justify-between items-center h-16">
-
-
-
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center ">
+            <div className="hidden lg:flex items-center justify-center ">
               {session && (
                 <AnimatePresence>
-                  <div className="flex items-center space-x-1 overflow-x-hidden scrollbar-hide">
+                  <div className="flex items-center gap-2 space-x-1 overflow-hidden">
+              <Link href="/" className="font-extrabold text-2xl bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Winnovation</Link>
+
                     {links.map((link, index) => {
                       const Icon = link.icon
                       const isActive = pathname === link.href
@@ -117,7 +116,7 @@ export default function NavBar() {
                             className={`relative flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 overflow-hidden group whitespace-nowrap ${
                               isActive
                                 ? 'text-white shadow-lg transform scale-105'
-                                : 'text-gray-700 hover:text-white hover:shadow-md hover:scale-105'
+                                : 'text-gray-700 hover:text-gray-400 hover:shadow-md hover:scale-105'
                             }`}
                           >
                             {/* Animated Background */}

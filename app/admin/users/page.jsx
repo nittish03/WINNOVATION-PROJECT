@@ -65,6 +65,7 @@ export default function AdminUsersPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -107,6 +108,31 @@ export default function AdminUsersPage() {
                 <option value="admin">Admins</option>
               </select>
             </div>
+          </div>
+        </div>
+                {/* Stats */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <div className="text-2xl font-bold text-blue-600">{users.length}</div>
+            <div className="text-sm text-gray-600">Total Users</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <div className="text-2xl font-bold text-green-600">
+              {users.filter(u => u.role === 'student').length}
+            </div>
+            <div className="text-sm text-gray-600">Students</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <div className="text-2xl font-bold text-purple-600">
+              {users.filter(u => u.role === 'instructor').length}
+            </div>
+            <div className="text-sm text-gray-600">Instructors</div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4 text-center">
+            <div className="text-2xl font-bold text-red-600">
+              {users.filter(u => u.role === 'admin').length}
+            </div>
+            <div className="text-sm text-gray-600">Admins</div>
           </div>
         </div>
 
@@ -183,31 +209,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{users.length}</div>
-            <div className="text-sm text-gray-600">Total Users</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {users.filter(u => u.role === 'student').length}
-            </div>
-            <div className="text-sm text-gray-600">Students</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              {users.filter(u => u.role === 'instructor').length}
-            </div>
-            <div className="text-sm text-gray-600">Instructors</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">
-              {users.filter(u => u.role === 'admin').length}
-            </div>
-            <div className="text-sm text-gray-600">Admins</div>
-          </div>
-        </div>
+
       </div>
     </div>
   )
