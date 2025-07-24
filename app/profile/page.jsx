@@ -81,14 +81,14 @@ export default function ProfilePage() {
           <button onClick={() => setEdit(true)} className="bg-blue-700 text-white py-2 px-4 rounded">Edit Profile</button>
         </div>
       ) : (
-        <form onSubmit={saveProfile} className="space-y-3">
+        <form onSubmit={saveProfile} className="space-y-3 text-black">
           <input name="name" value={form.name} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Name" />
           <input name="university" value={form.university} onChange={handleChange} className="w-full border p-2 rounded" placeholder="University" />
           <input name="degree" value={form.degree} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Degree" />
           <input name="branch" value={form.branch} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Branch" />
           <input name="image" value={form.image} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Image URL" />
           <button className="bg-green-600 text-white py-2 px-4 rounded" type="submit">Save</button>
-          <button type="button" className="ml-2 py-2 px-4 rounded border" onClick={() => setEdit(false)}>Cancel</button>
+          <button type="button" className="ml-2 py-2 px-4 rounded border text-[#ffffff]" onClick={() => setEdit(false)}>Cancel</button>
         </form>
       )}
     </div>
