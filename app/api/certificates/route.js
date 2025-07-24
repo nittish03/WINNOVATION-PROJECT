@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/utils/prisma'
+import {prismaDB} from '@/lib/prismaDB'
 
 export async function GET() {
-  const certificates = await prisma.certificate.findMany({ include: { user: true, course: true } })
+  const certificates = await prismaDB.certificate.findMany({ include: { user: true, course: true } })
   return NextResponse.json(certificates)
 }
 
 export async function POST(request) {
   const { userId, courseId, url } = await request.json()
   try {
-    const certificate = await prisma.certificate.create({
+    const certificate = await prismaDB.certificate.create({
       data: { userId, courseId, url }
     })
     return NextResponse.json(certificate)

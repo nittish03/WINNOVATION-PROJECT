@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/utils/prisma'
+import {prismaDB} from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route" // Adjust if path is different
 
@@ -8,7 +8,7 @@ export async function GET(request) {
   if (!session || session.user.role !== 'student') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const userSkills = await prisma.userSkill.findMany({
+  const userSkills = await prismaDB.userSkill.findMany({
     where: { userId: session.user.id },
     include: { skill: true }
   })
@@ -23,17 +23,17 @@ export async function POST(request) {
   const { skillId, level } = await request.json()
 
   // Check if user already has this skill, if so, update
-  const existing = await prisma.userSkill.findFirst({
+  const existing = await prismaDB.userSkill.findFirst({
     where: { userId: session.user.id, skillId }
   })
   let userSkill
   if (existing) {
-    userSkill = await prisma.userSkill.update({
+    userSkill = await prismaDB.userSkill.update({
       where: { id: existing.id },
       data: { level }
     })
   } else {
-    userSkill = await prisma.userSkill.create({
+    userSkill = await prismaDB.userSkill.create({
       data: { userId: session.user.id, skillId, level }
     })
   }

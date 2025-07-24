@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/utils/prisma'
+import {prismaDB} from '@/lib/prismaDB'
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function GET() {
-  const skills = await prisma.skill.findMany()
+  const skills = await prismaDB.skill.findMany()
   return NextResponse.json(skills)
 }
 
@@ -15,7 +15,7 @@ export async function POST(request) {
   }
   const { name, description } = await request.json()
   try {
-    const skill = await prisma.skill.create({ data: { name, description } })
+    const skill = await prismaDB.skill.create({ data: { name, description } })
     return NextResponse.json(skill)
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })
