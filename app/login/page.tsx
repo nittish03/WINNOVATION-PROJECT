@@ -3,7 +3,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FcGoogle } from "react-icons/fc";
-import { signIn } from 'next-auth/react';
+import { signIn,useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import { 
   FaEye, 
@@ -16,6 +16,7 @@ import {
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 
 const LoginPage = () => {
+  const {data:session} = useSession();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +35,9 @@ const LoginPage = () => {
       toast.error("Failed to Log in, please try again");
     }
   };
+  if(session){
+    router.push("/")
+  }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

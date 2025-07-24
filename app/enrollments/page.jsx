@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 export default function EnrollmentsPage() {
   const { data: session } = useSession()
@@ -10,22 +11,22 @@ export default function EnrollmentsPage() {
   const [courseId, setCourseId] = useState('')
 
   useEffect(() => {
-    fetch('/api/enrollments').then(res => res.json()).then(setEnrollments)
-    fetch('/api/courses').then(res => res.json()).then(setCourses)
+    axios.get('/api/enrollments').then(res => setEnrollments(res.data))
+    axios.get('/api/courses').then(res => setCourses(res.data))
   }, [])
 
   async function enroll(e) {
     e.preventDefault()
-    const res = await fetch('/api/enrollments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId })
-    })
-    if (res.ok) {
-      toast.success('Enrolled!')
-      setCourseId('')
-      fetch('/api/enrollments').then(res => res.json()).then(setEnrollments)
-    } else {
+    try {
+      const res = await axios.post('/api/enrollments', { courseId })
+      if (res.status === 200) {
+        toast.success('Enrolled!')
+        setCourseId('')
+        axios.get('/api/enrollments').then(res => setEnrollments(res.data))
+      } else {
+        toast.error('Error enrolling')
+      }
+    } catch (error) {
       toast.error('Error enrolling')
     }
   }

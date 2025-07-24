@@ -13,6 +13,7 @@ model Account {
   type              String
   provider          String
   providerAccountId String
+  role           String    @default("student")
   refresh_token     String? @db.String
   access_token      String? @db.String
   expires_at        Int?
@@ -46,7 +47,7 @@ model User {
   university     String?
   degree         String?
   branch         String?
-  role           String    @default("user")
+  role           String    @default("student")
   accounts       Account[]
   sessions       Session[]
   skills         UserSkill[]

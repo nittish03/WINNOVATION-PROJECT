@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 export default function UserSkillsPage() {
   const [userSkills, setUserSkills] = useState([])
@@ -9,23 +10,23 @@ export default function UserSkillsPage() {
   const [level, setLevel] = useState(1)
 
   useEffect(() => {
-    fetch('/api/user-skills').then(res => res.json()).then(setUserSkills)
-    fetch('/api/skills').then(res => res.json()).then(setSkills)
+    axios.get('/api/user-skills').then(res => setUserSkills(res.data))
+    axios.get('/api/skills').then(res => setSkills(res.data))
   }, [])
 
   async function addUserSkill(e) {
     e.preventDefault()
-    const res = await fetch('/api/user-skills', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ skillId, level })
-    })
-    if (res.ok) {
-      toast.success('Skill Added/Updated!')
-      setSkillId('')
-      setLevel(1)
-      fetch('/api/user-skills').then(res => res.json()).then(setUserSkills)
-    } else {
+    try {
+      const res = await axios.post('/api/user-skills', { skillId, level })
+      if (res.status === 200) {
+        toast.success('Skill Added/Updated!')
+        setSkillId('')
+        setLevel(1)
+        axios.get('/api/user-skills').then(res => setUserSkills(res.data))
+      } else {
+        toast.error('Error updating skill')
+      }
+    } catch (error) {
       toast.error('Error updating skill')
     }
   }

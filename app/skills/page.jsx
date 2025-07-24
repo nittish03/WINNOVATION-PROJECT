@@ -31,13 +31,13 @@ export default function SkillsPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto py-8">
+    <div className="max-w-xl mx-auto py-8 text-black">
       <h1 className="text-2xl font-bold mb-4">Skills Directory</h1>
       {session?.user?.role === 'admin' && (
         <form onSubmit={handleAddSkill} className="mb-6 space-y-2">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Skill Name" className="border p-2 rounded w-full" required />
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className="border p-2 rounded w-full" />
-          <button className="bg-blue-600 text-white py-2 px-4 rounded" type="submit">Add Skill</button>
+          <button className="bg-blue-600 text-black py-2 px-4 rounded" type="submit">Add Skill</button>
         </form>
       )}
       <ul className="space-y-2">

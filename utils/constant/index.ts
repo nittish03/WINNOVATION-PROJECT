@@ -85,32 +85,32 @@ export const pricingCards = [
     },
 ];
 
-export const bentoCards = [
-    {
-        title: 'Start with Inspiration',
-        info: 'Browse our vast library of pre-designed templates or upload your own images.',
-        imgSrc: '/assets/bento-1.svg', // Lightbulb or Inspiration icon
-        alt: 'Inspiration for website creation'
-    },
-    {
-        title: 'AI Assists Your Vision',
-        info: 'Our intelligent AI tailors suggestions and functionalities based on your goals.',
-        imgSrc: '/assets/bento1.svg', // AI Assistant icon
-        alt: 'AI website building assistant'
-    },
-    {
-        title: 'Drag & Drop Customization',
-        info: 'Effortlessly personalize your website with our intuitive drag-and-drop editor.',
-        imgSrc: '/assets/bento1.svg', // Drag and Drop icon or hand editing a website
-        alt: 'Website customization with drag and drop'
-    },
-    {
-        title: 'Launch & Shine Online',
-        info: 'Publish your website with a single click and take your brand to the world.',
-        imgSrc: '/assets/bento1.svg', // Rocket launching or website going live
-        alt: 'Website launch and publication'
-    },
-];
+// export const bentoCards = [
+//     {
+//         title: 'Start with Inspiration',
+//         info: 'Browse our vast library of pre-designed templates or upload your own images.',
+//         imgSrc: '/assets/bento-1.svg', // Lightbulb or Inspiration icon
+//         alt: 'Inspiration for website creation'
+//     },
+//     {
+//         title: 'AI Assists Your Vision',
+//         info: 'Our intelligent AI tailors suggestions and functionalities based on your goals.',
+//         imgSrc: '/assets/bento1.svg', // AI Assistant icon
+//         alt: 'AI website building assistant'
+//     },
+//     {
+//         title: 'Drag & Drop Customization',
+//         info: 'Effortlessly personalize your website with our intuitive drag-and-drop editor.',
+//         imgSrc: '/assets/bento1.svg', // Drag and Drop icon or hand editing a website
+//         alt: 'Website customization with drag and drop'
+//     },
+//     {
+//         title: 'Launch & Shine Online',
+//         info: 'Publish your website with a single click and take your brand to the world.',
+//         imgSrc: '/assets/bento1.svg', // Rocket launching or website going live
+//         alt: 'Website launch and publication'
+//     },
+// ];
 
 export const reviews = [
     {

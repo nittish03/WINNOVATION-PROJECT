@@ -5,7 +5,8 @@ import { authOptions } from '@/lib/authOption'
 
 export async function GET(request) {
   const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'student') {
+  console.log(session)
+  if ( session.user.role !== 'student') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const userSkills = await prismaDB.userSkill.findMany({

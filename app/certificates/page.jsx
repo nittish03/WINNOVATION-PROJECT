@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn, signOut } from "next-auth/react";
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 export default function CertificatesPage() {
   const { data: session } = useSession()
@@ -13,25 +14,25 @@ export default function CertificatesPage() {
   const [url, setUrl] = useState('')
 
   useEffect(() => {
-    fetch('/api/certificates').then(res => res.json()).then(setCertificates)
-    fetch('/api/courses').then(res => res.json()).then(setCourses)
-    // fetch('/api/users').then(res => res.json()).then(setUsers) // Optionally populate this for admin
+    axios.get('/api/certificates').then(res => setCertificates(res.data))
+    axios.get('/api/courses').then(res => setCourses(res.data))
+    // axios.get('/api/users').then(res => setUsers(res.data)) // Optionally populate this for admin
   }, [])
 
   async function addCertificate(e) {
     e.preventDefault()
-    const res = await fetch('/api/certificates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, courseId, url })
-    })
-    if (res.ok) {
-      toast.success('Certificate Issued!')
-      setUserId('')
-      setCourseId('')
-      setUrl('')
-      fetch('/api/certificates').then(res => res.json()).then(setCertificates)
-    } else {
+    try {
+      const res = await axios.post('/api/certificates', { userId, courseId, url })
+      if (res.status === 200 || res.status === 201) {
+        toast.success('Certificate Issued!')
+        setUserId('')
+        setCourseId('')
+        setUrl('')
+        axios.get('/api/certificates').then(res => setCertificates(res.data))
+      } else {
+        toast.error('Error issuing certificate')
+      }
+    } catch (error) {
       toast.error('Error issuing certificate')
     }
   }

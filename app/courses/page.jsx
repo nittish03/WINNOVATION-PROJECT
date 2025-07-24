@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
+import axios from 'axios'
 
 export default function CoursesPage() {
   const { data: session } = useSession()
@@ -12,24 +13,24 @@ export default function CoursesPage() {
   const [skillId, setSkillId] = useState('')
 
   useEffect(() => {
-    fetch('/api/skills').then(res => res.json()).then(setSkills)
-    fetch('/api/courses').then(res => res.json()).then(setCourses)
+    axios.get('/api/skills').then(res => setSkills(res.data))
+    axios.get('/api/courses').then(res => setCourses(res.data))
   }, [])
 
   async function addCourse(e) {
     e.preventDefault()
-    const res = await fetch('/api/courses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, skillId })
-    })
-    if (res.ok) {
-      toast.success('Course Added!')
-      setTitle('')
-      setDescription('')
-      setSkillId('')
-      fetch('/api/courses').then(res => res.json()).then(setCourses)
-    } else {
+    try {
+      const res = await axios.post('/api/courses', { title, description, skillId })
+      if (res.status === 200) {
+        toast.success('Course Added!')
+        setTitle('')
+        setDescription('')
+        setSkillId('')
+        axios.get('/api/courses').then(res => setCourses(res.data))
+      } else {
+        toast.error('Error adding course')
+      }
+    } catch (error) {
       toast.error('Error adding course')
     }
   }

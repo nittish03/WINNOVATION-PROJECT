@@ -1,8 +1,10 @@
 'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
 import { useRouter } from 'next/navigation'
+import axios from 'axios'
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -19,7 +21,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!session) return
-    fetch('/api/profile').then(r => r.json()).then(profile => {
+    axios.get('/api/profile').then(res => {
+      const profile = res.data
       setProfile(profile)
       setForm({
         name: profile?.name || '',
@@ -38,16 +41,16 @@ export default function ProfilePage() {
 
   async function saveProfile(e) {
     e.preventDefault()
-    const res = await fetch('/api/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
-    if (res.ok) {
-      toast.success('Profile updated!')
-      setEdit(false)
-      fetch('/api/profile').then(r => r.json()).then(setProfile)
-    } else {
+    try {
+      const res = await axios.patch('/api/profile', form)
+      if (res.status === 200) {
+        toast.success('Profile updated!')
+        setEdit(false)
+        axios.get('/api/profile').then(res => setProfile(res.data))
+      } else {
+        toast.error('Error updating profile')
+      }
+    } catch (error) {
       toast.error('Error updating profile')
     }
   }
@@ -68,7 +71,7 @@ export default function ProfilePage() {
       {!edit ? (
         <div>
           <div className="mb-4">
-            <img src={profile.image || '/avatar.png'} alt="profile" className="w-24 h-24 object-cover rounded-full mb-2" />
+            {/* <img src={profile.image || '/avatar.png'} alt="profile" className="w-24 h-24 object-cover rounded-full mb-2" /> */}
             <div><span className="font-semibold">Name:</span> {profile.name}</div>
             <div><span className="font-semibold">Email:</span> {profile.email}</div>
             <div><span className="font-semibold">University:</span> {profile.university}</div>

@@ -1,6 +1,8 @@
 'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import axios from 'axios'
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
@@ -11,10 +13,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!session) return
-    fetch('/api/profile').then(r => r.json()).then(setProfile)
-    fetch('/api/enrollments').then(r => r.json()).then(setEnrollments)
-    fetch('/api/user-skills').then(r => r.json()).then(setUserSkills)
-    fetch('/api/certificates').then(r => r.json()).then(setCertificates)
+    axios.get('/api/profile').then(res => setProfile(res.data))
+    axios.get('/api/enrollments').then(res => setEnrollments(res.data))
+    if(session.user?.role === 'student'){
+      axios.get('/api/user-skills').then(res => setUserSkills(res.data))
+    }
+    axios.get('/api/certificates').then(res => setCertificates(res.data))
   }, [session])
 
   if (status === 'loading') return <div>Loading...</div>

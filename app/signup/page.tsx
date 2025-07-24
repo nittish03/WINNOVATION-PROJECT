@@ -3,7 +3,7 @@
 import React, { FormEvent, useState } from 'react';
 import { redirect } from 'next/navigation';
 import axios from 'axios';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import toast from 'react-hot-toast';
@@ -21,6 +21,10 @@ import { FaWandMagicSparkles } from 'react-icons/fa6';
 
 const SignUpPage = () => {
   const router = useRouter();
+  const {data : session} = useSession();
+  if(session){
+    router.push("/")
+  }
   const [otp, setOtp] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
