@@ -7,7 +7,7 @@ export async function GET(req, { params }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { threadId } = params
@@ -32,14 +32,22 @@ export async function POST(req, { params }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { threadId } = params
     const { content } = await req.json()
 
     if (!content || content.trim().length === 0) {
-      return NextResponse.json({ error: "Content is required" }, { status: 400 })
+      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
+    }
+
+    const thread = await prismaDB.discussionThread.findUnique({
+      where: { id: threadId }
+    })
+
+    if (!thread) {
+      return NextResponse.json({ error: 'Thread not found' }, { status: 404 })
     }
 
     const reply = await prismaDB.discussionReply.create({

@@ -7,14 +7,14 @@ export async function PATCH(req, { params }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { userId } = params
     const { role } = await req.json()
 
     if (!['student', 'admin', 'faculty'].includes(role)) {
-      return NextResponse.json({ error: "Invalid role" }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
     const updatedUser = await prismaDB.user.update({

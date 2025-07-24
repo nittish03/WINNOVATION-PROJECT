@@ -23,7 +23,8 @@ export async function GET() {
         _count: {
           select: {
             enrollments: true,
-            certificates: true
+            certificates: true,
+            skills: true
           }
         }
       },
