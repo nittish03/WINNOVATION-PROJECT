@@ -83,7 +83,7 @@ export default function NavBar() {
         ref={navRef}
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500${
           scrolled 
             ? 'bg-white/90 backdrop-blur-xl shadow-2xl border-b border-gray-200/50' 
             : 'bg-white/95 backdrop-blur-md shadow-lg'

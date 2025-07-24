@@ -10,34 +10,28 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const assignment = await prismaDB.assignment.findUnique({
-      where: { id: params.id },
+    const submissions = await prismaDB.submission.findMany({
+      where: { assignmentId: params.id },
       include: {
-        course: {
+        user: {
           select: {
             id: true,
-            title: true
-          }
-        },
-        createdBy: {
-          select: {
             name: true,
             email: true
           }
         },
-        _count: {
+        grade: {
           select: {
-            submissions: true
+            points: true,
+            feedback: true,
+            gradedAt: true
           }
         }
-      }
+      },
+      orderBy: { submittedAt: 'desc' }
     })
 
-    if (!assignment) {
-      return NextResponse.json({ error: 'Assignment not found' }, { status: 404 })
-    }
-
-    return NextResponse.json(assignment)
+    return NextResponse.json(submissions)
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
