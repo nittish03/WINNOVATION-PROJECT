@@ -1,77 +1,46 @@
 'use client'
-'use client'
-import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { toast } from 'react-toastify'
-import { useRouter } from 'next/navigation'
-import axios from 'axios'
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { toast } from "react-toastify"
+import axios from "axios"
 
 export default function ProfilePage() {
-    const router = useRouter();
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const [profile, setProfile] = useState(null)
   const [edit, setEdit] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    university: '',
-    degree: '',
-    branch: '',
-    image: '',
-  })
+  const [form, setForm] = useState({ name: "", university: "", degree: "", branch: "", image: "" })
 
   useEffect(() => {
-    if (!session) return
-    axios.get('/api/profile').then(res => {
-      const profile = res.data
-      setProfile(profile)
+    if (!session) return;
+    axios.get("/api/profile").then(r => {
+      setProfile(r.data)
       setForm({
-        name: profile?.name || '',
-        university: profile?.university || '',
-        degree: profile?.degree || '',
-        branch: profile?.branch || '',
-        image: profile?.image || '',
+        name: r.data?.name || "",
+        university: r.data?.university || "",
+        degree: r.data?.degree || "",
+        branch: r.data?.branch || "",
+        image: r.data?.image || ""
       })
     })
   }, [session])
 
-  function handleChange(e) {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  }
-
-
-  async function saveProfile(e) {
+  const saveProfile = async (e) => {
     e.preventDefault()
-    try {
-      const res = await axios.patch('/api/profile', form)
-      if (res.status === 200) {
-        toast.success('Profile updated!')
-        setEdit(false)
-        axios.get('/api/profile').then(res => setProfile(res.data))
-      } else {
-        toast.error('Error updating profile')
-      }
-    } catch (error) {
-      toast.error('Error updating profile')
-    }
+    await axios.patch("/api/profile", form)
+    toast.success("Profile updated")
+    setEdit(false)
+    axios.get("/api/profile").then(r => setProfile(r.data))
   }
 
-  if (status === 'loading') return <div>Loading...</div>
-  if (!session) return <>
-  <div>Please sign in.</div>
-  <button onClick={()=>{
-    router.push("/login")
-  }}>Sign in</button>
-  </>
-                        
+  if (!session) return <div>Loading...</div>
   if (!profile) return <div>Loading profile...</div>
-
   return (
     <div className="py-8 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Profile</h1>
       {!edit ? (
         <div>
           <div className="mb-4">
-            {/* <img src={profile.image || '/avatar.png'} alt="profile" className="w-24 h-24 object-cover rounded-full mb-2" /> */}
+            <img src={profile.image || '/avatar.png'} alt="profile" className="w-24 h-24 object-cover rounded-full mb-2" />
             <div><span className="font-semibold">Name:</span> {profile.name}</div>
             <div><span className="font-semibold">Email:</span> {profile.email}</div>
             <div><span className="font-semibold">University:</span> {profile.university}</div>
@@ -81,14 +50,16 @@ export default function ProfilePage() {
           <button onClick={() => setEdit(true)} className="bg-blue-700 text-white py-2 px-4 rounded">Edit Profile</button>
         </div>
       ) : (
-        <form onSubmit={saveProfile} className="space-y-3 text-black">
-          <input name="name" value={form.name} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Name" />
-          <input name="university" value={form.university} onChange={handleChange} className="w-full border p-2 rounded" placeholder="University" />
-          <input name="degree" value={form.degree} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Degree" />
-          <input name="branch" value={form.branch} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Branch" />
-          <input name="image" value={form.image} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Image URL" />
-          <button className="bg-green-600 text-white py-2 px-4 rounded" type="submit">Save</button>
-          <button type="button" className="ml-2 py-2 px-4 rounded border text-[#ffffff]" onClick={() => setEdit(false)}>Cancel</button>
+        <form onSubmit={saveProfile} className="space-y-3">
+          <input name="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full border p-2 rounded" placeholder="Name" />
+          <input name="university" value={form.university} onChange={e => setForm(f => ({ ...f, university: e.target.value }))} className="w-full border p-2 rounded" placeholder="University" />
+          <input name="degree" value={form.degree} onChange={e => setForm(f => ({ ...f, degree: e.target.value }))} className="w-full border p-2 rounded" placeholder="Degree" />
+          <input name="branch" value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} className="w-full border p-2 rounded" placeholder="Branch" />
+          <input name="image" value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} className="w-full border p-2 rounded" placeholder="Profile Image URL" />
+          <div className="flex gap-2">
+            <button className="bg-green-600 text-white py-2 px-4 rounded" type="submit">Save</button>
+            <button type="button" className="py-2 px-4 rounded border" onClick={() => setEdit(false)}>Cancel</button>
+          </div>
         </form>
       )}
     </div>

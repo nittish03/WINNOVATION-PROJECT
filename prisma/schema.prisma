@@ -13,7 +13,6 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  role           String    @default("student")
   refresh_token     String? @db.String
   access_token      String? @db.String
   expires_at        Int?
@@ -36,30 +35,36 @@ model Session {
 }
 
 model User {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime?
-  hashedPassword String?
-  image          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  university     String?
-  degree         String?
-  branch         String?
-  role           String    @default("student")
-  accounts       Account[]
-  sessions       Session[]
-  skills         UserSkill[]
-  courses        Course[]
-  enrollments    Enrollment[]
-  certificates   Certificate[]
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  name              String?
+  email             String?           @unique
+  emailVerified     DateTime?
+  hashedPassword    String?
+  image             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  university        String?
+  degree            String?
+  branch            String?
+  role              String            @default("student")
+  accounts          Account[]
+  sessions          Session[]
+  skills            UserSkill[]
+  courses           Course[]
+  enrollments       Enrollment[]
+  certificates      Certificate[]
+  assignments       Assignment[]
+  submissions       Submission[]
+  grades            Grade[]
+  gradedAssignments Grade[]           @relation("GradedBy")
+  threads           DiscussionThread[]
+  replies           DiscussionReply[]
 }
 
 model NonVerifiedUser {
-  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  email          String @unique
+  email          String   @unique
   hashedPassword String
   otp            Int
   otpExpiry      DateTime
@@ -75,13 +80,14 @@ model VerificationToken {
 }
 
 model Skill {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  name        String     @unique
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  name        String      @unique
   description String?
+  category    String      @default("General")
   users       UserSkill[]
   courses     Course[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model UserSkill {
@@ -92,31 +98,85 @@ model UserSkill {
   skillId   String   @db.ObjectId
   level     Int
   addedAt   DateTime @default(now())
+
+  @@unique([userId, skillId])
 }
 
 model Course {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
-  skill       Skill?   @relation(fields: [skillId], references: [id], onDelete: SetNull)
-  skillId     String?  @db.ObjectId
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  createdById String   @db.ObjectId
+  skill       Skill?        @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  skillId     String?       @db.ObjectId
+  createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById String        @db.ObjectId
   enrollments Enrollment[]
   certificates Certificate[]
+  assignments Assignment[]
+  threads     DiscussionThread[]
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime      @default(now())
 }
 
 model Enrollment {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String   @db.ObjectId
-  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId   String   @db.ObjectId
-  status     String
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String    @db.ObjectId
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId   String    @db.ObjectId
+  status     String    @default("enrolled")
+  progress   Int       @default(0)
   completedAt DateTime?
-  enrolledAt DateTime @default(now())
+  enrolledAt DateTime  @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Assignment {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  dueDate     DateTime?
+  maxPoints   Int          @default(100)
+  courseId    String       @db.ObjectId
+  createdById String       @db.ObjectId
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  submissions Submission[]
+  grades      Grade[]
+}
+
+model Submission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  content      String
+  fileUrl      String?
+  submittedAt  DateTime   @default(now())
+  assignmentId String     @db.ObjectId
+  userId       String     @db.ObjectId
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+}
+
+model Grade {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  points       Int
+  feedback     String?
+  assignmentId String     @db.ObjectId
+  userId       String     @db.ObjectId
+  gradedById   String     @db.ObjectId
+  gradedAt     DateTime   @default(now())
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gradedBy   User       @relation("GradedBy", fields: [gradedById], references: [id])
+
+  @@unique([assignmentId, userId])
 }
 
 model Certificate {
@@ -127,4 +187,30 @@ model Certificate {
   courseId  String   @db.ObjectId
   issuedAt  DateTime @default(now())
   url       String?
+  title     String
+}
+
+model DiscussionThread {
+  id        String            @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String
+  courseId  String?           @db.ObjectId
+  authorId  String            @db.ObjectId
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  course  Course?           @relation(fields: [courseId], references: [id])
+  author  User              @relation(fields: [authorId], references: [id])
+  replies DiscussionReply[]
+}
+
+model DiscussionReply {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  content  String
+  threadId String   @db.ObjectId
+  authorId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  thread DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User             @relation(fields: [authorId], references: [id])
 }
