@@ -18,6 +18,20 @@ export default function DiscussionThreadPage() {
   const [loading, setLoading] = useState(true)
   const [replyContent, setReplyContent] = useState("")
   const [reload, setReload] = useState(false)
+  const [userColors, setUserColors] = useState({});
+
+  const generateColor = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+      let value = (hash >> (i * 8)) & 0xFF;
+      color += ('00' + value.toString(16)).substr(-2);
+    }
+    return color;
+  }
 
   useEffect(() => {
     if (id) {
@@ -53,6 +67,13 @@ export default function DiscussionThreadPage() {
       // Simple comparison by stringifying the arrays
       if (JSON.stringify(newReplies) !== JSON.stringify(replies)) {
         setReplies(newReplies);
+        const newColors = {};
+        newReplies.forEach(reply => {
+          if (!newColors[reply.authorId]) {
+            newColors[reply.authorId] = generateColor(reply.authorId);
+          }
+        });
+        setUserColors(newColors);
       }
     } catch (error) {
       console.error("Error loading replies:", error)
@@ -155,29 +176,28 @@ export default function DiscussionThreadPage() {
               </button>
             )}
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 text-white">
             {replies.map((reply) => (
-              <div key={reply.id} className="flex items-start space-x-4">
-<div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
-  {session?.user?.image ? (
+              <div key={reply.id} className={`p-4 rounded-lg text-gray-100`} style={{ backgroundColor: userColors[reply.authorId] || '#f0f0f0' }}>
+                <div className="flex items-start space-x-4">
+<div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+  {reply.author?.image ? (
     <Image
-      src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
-      alt={session?.user?.name}
+      src={`/api/image-proxy?url=${encodeURIComponent(reply.author.image)}`}
+      alt={reply.author?.name || 'User avatar'}
       width={40}
       height={40}
       className="w-full h-full object-cover"
-      priority={true}
     />
   ) : (
     <User className="h-6 w-6 text-gray-400" />
   )}
 </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex-1 t">
+                    <div className="flex items-center justify-between">
                     <p className="font-semibold">{reply.author?.name}</p>
                     <div className="flex items-center space-x-2">
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-white">
                         {new Date(reply.createdAt).toLocaleString()}
                       </p>
                       {(session?.user?.role === 'admin' || session?.user?.id === reply.authorId) && (
@@ -190,9 +210,10 @@ export default function DiscussionThreadPage() {
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-700 mt-1">{reply.content}</p>
+                  <p className="text-white mt-1">{reply.content}</p>
                 </div>
               </div>
+            </div>
             ))}
             {replies.length === 0 && <p className="text-gray-500">No replies yet.</p>}
           </div>
