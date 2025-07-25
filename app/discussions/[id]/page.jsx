@@ -24,6 +24,14 @@ export default function DiscussionThreadPage() {
       loadThread()
       loadReplies()
     }
+
+    const interval = setInterval(() => {
+      if (id) {
+        loadReplies(true); // Pass true to indicate a background refresh
+      }
+    }, 500); // Poll every 0.5 seconds
+
+    return () => clearInterval(interval);
   }, [id, reload])
 
   const loadThread = async () => {
@@ -37,14 +45,21 @@ export default function DiscussionThreadPage() {
     }
   }
 
-  const loadReplies = async () => {
+  const loadReplies = async (isBackground = false) => {
     try {
       const response = await axios.get(`/api/discussions/${id}/replies`)
-      setReplies(response.data)
+      const newReplies = response.data;
+
+      // Simple comparison by stringifying the arrays
+      if (JSON.stringify(newReplies) !== JSON.stringify(replies)) {
+        setReplies(newReplies);
+      }
     } catch (error) {
       console.error("Error loading replies:", error)
     } finally {
-      setLoading(false)
+      if (!isBackground) {
+        setLoading(false)
+      }
     }
   }
 
