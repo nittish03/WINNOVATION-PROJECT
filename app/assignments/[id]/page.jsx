@@ -1,8 +1,7 @@
 'use client'
 import { useState, useEffect } from "react"
-import { use } from "react" // Add this import
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import { 
@@ -22,10 +21,9 @@ import {
 import Link from "next/link"
 import { toast } from "react-toastify"
 
-export default function AssignmentDetailPage({ params }) {
-  // Unwrap params using React.use()
-  const resolvedParams = use(params)
-  const assignmentId = resolvedParams.id
+export default function AssignmentDetailPage() {
+  const params = useParams();
+  const assignmentId = params.id;
 
   const { data: session } = useSession()
   const router = useRouter()
@@ -326,7 +324,7 @@ export default function AssignmentDetailPage({ params }) {
                 </motion.div>
 
                 {/* Grade Section */}
-                {grade && (
+                {grade ? (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -348,7 +346,7 @@ export default function AssignmentDetailPage({ params }) {
                         </div>
                       </div>
                       
-                      {grade.feedback && (
+                      {grade.feedback & (
                         <div>
                           <h4 className="font-medium text-gray-900 mb-2">Instructor Feedback:</h4>
                           <p className="text-gray-700">{grade.feedback}</p>
@@ -360,7 +358,9 @@ export default function AssignmentDetailPage({ params }) {
                       </div>
                     </div>
                   </motion.div>
-                )}
+                ):<>
+                <p className="text-red-600 text-center font-extrabold text-4xl">Not Graded Yet</p>
+                </>}
               </>
             )}
           </div>

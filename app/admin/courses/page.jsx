@@ -358,7 +358,7 @@ export default function AdminCoursesPage() {
                               : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                           }`}
                         >
-                          {course.publishedAt ? "Published" : "Draft"}
+                          {course.publishedAt ? "Published" : "Draft/Publish"}
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

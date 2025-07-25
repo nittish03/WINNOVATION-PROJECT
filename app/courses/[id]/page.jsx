@@ -1,8 +1,7 @@
 'use client'
 import { useState, useEffect } from "react"
-import { use } from "react" // Add this import
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
 import { motion } from "framer-motion"
 import { 
@@ -23,10 +22,9 @@ import {
 import Link from "next/link"
 import { toast } from "react-toastify"
 
-export default function CourseDetailPage({ params }) {
-  // Unwrap params using React.use()
-  const resolvedParams = use(params)
-  const courseId = resolvedParams.id
+export default function CourseDetailPage() {
+  const params = useParams();
+  const courseId = params.id;
 
   const { data: session } = useSession()
   const router = useRouter()

@@ -1,13 +1,14 @@
 'use client'
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
 import { MessageSquare, ArrowLeft, User, Calendar, Send } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 
-export default function DiscussionThreadPage({ params }) {
+export default function DiscussionThreadPage() {
+  const params = useParams();
   const { id } = params;
   const { data: session } = useSession()
   const router = useRouter()

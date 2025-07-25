@@ -3,14 +3,17 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-import { FileText, Calendar, Clock, CheckCircle } from "lucide-react"
+import { FileText, Calendar, Clock, CheckCircle, Search, X } from "lucide-react"
 import Link from "next/link"
 
 export default function AssignmentsPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [assignments, setAssignments] = useState([])
+  const [filteredAssignments, setFilteredAssignments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all") // all, pending, submitted
 
   useEffect(() => {
     if (!session) {
@@ -20,10 +23,32 @@ export default function AssignmentsPage() {
     loadAssignments()
   }, [session, router])
 
+  useEffect(() => {
+    let filtered = assignments;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (assignment) =>
+          assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          assignment.course?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          assignment.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((assignment) => getStatus(assignment) === statusFilter);
+    }
+
+    setFilteredAssignments(filtered);
+  }, [searchTerm, statusFilter, assignments]);
+
   const loadAssignments = async () => {
     try {
       const response = await axios.get('/api/assignments')
       setAssignments(response.data)
+      setFilteredAssignments(response.data)
     } catch (error) {
       console.error('Error loading assignments:', error)
     } finally {
@@ -62,7 +87,54 @@ export default function AssignmentsPage() {
           <p className="text-gray-600">Manage your course assignments</p>
         </div>
 
-        {assignments.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search assignments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border text-xs border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="submitted">Submitted</option>
+              </select>
+              {(searchTerm || statusFilter !== "all") && (
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {filteredAssignments.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-lg font-medium text-gray-900">No assignments found</h3>
@@ -70,7 +142,7 @@ export default function AssignmentsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {assignments.map(assignment => {
+            {filteredAssignments.map(assignment => {
               const status = getStatus(assignment)
               const daysLeft = Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24))
               
@@ -111,20 +183,22 @@ export default function AssignmentsPage() {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <Link
+
+                      {status === 'pending' ? (
+                        <Link
+                          href={`/assignments/${assignment.id}/submit`}
+                          className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors"
+                        >
+                           View Details/Submit
+                        </Link>
+                      ):<>
+                                            <Link
                         href={`/assignments/${assignment.id}`}
                         className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors"
                       >
                         View Details
                       </Link>
-                      {status === 'pending' && (
-                        <Link
-                          href={`/assignments/${assignment.id}/submit`}
-                          className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors"
-                        >
-                          Submit
-                        </Link>
-                      )}
+                      </>}
                     </div>
                   </div>
                 </div>
@@ -134,23 +208,23 @@ export default function AssignmentsPage() {
         )}
 
         {/* Quick Stats */}
-        {assignments.length > 0 && (
+        {filteredAssignments.length > 0 && (
           <div className="mt-8 grid grid-cols-3 gap-4">
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <div className="text-2xl font-bold text-yellow-600">
-                {assignments.filter(a => getStatus(a) === 'pending').length}
+                {filteredAssignments.filter(a => getStatus(a) === 'pending').length}
               </div>
               <div className="text-sm text-gray-600">Pending</div>
             </div>
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <div className="text-2xl font-bold text-green-600">
-                {assignments.filter(a => getStatus(a) === 'submitted').length}
+                {filteredAssignments.filter(a => getStatus(a) === 'submitted').length}
               </div>
               <div className="text-sm text-gray-600">Submitted</div>
             </div>
             <div className="bg-white rounded-lg shadow p-4 text-center">
               <div className="text-2xl font-bold text-red-600">
-                {assignments.filter(a => getStatus(a) === 'overdue').length}
+                {filteredAssignments.filter(a => getStatus(a) === 'overdue').length}
               </div>
               <div className="text-sm text-gray-600">Overdue</div>
             </div>

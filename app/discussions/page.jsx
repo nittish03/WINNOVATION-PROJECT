@@ -2,28 +2,41 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import axios from "axios"
-import { MessageSquare, Plus, Calendar, User, Trash2 } from "lucide-react"
+import { MessageSquare, Plus, Calendar, User, Trash2, Search, X } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 
 export default function DiscussionsPage() {
   const { data: session } = useSession()
   const [threads, setThreads] = useState([])
+  const [filteredThreads, setFilteredThreads] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     content: ''
   })
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     loadThreads()
   }, [])
 
+  useEffect(() => {
+    const filtered = threads.filter(
+      (thread) =>
+        thread.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        thread.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        thread.author?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredThreads(filtered);
+  }, [searchTerm, threads]);
+
   const loadThreads = async () => {
     try {
       const response = await axios.get('/api/discussions')
       setThreads(response.data)
+      setFilteredThreads(response.data)
     } catch (error) {
       console.error('Error loading discussions:', error)
     } finally {
@@ -82,7 +95,30 @@ export default function DiscussionsPage() {
           </button>
         </div>
 
-        {threads.length === 0 ? (
+        <div className="mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search discussions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {filteredThreads.length === 0 ? (
           <div className="text-center py-12">
             <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-lg font-medium text-gray-900">No discussions yet</h3>
@@ -90,7 +126,7 @@ export default function DiscussionsPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {threads.map(thread => (
+            {filteredThreads.map(thread => (
               <div key={thread.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start flex-1">
