@@ -186,7 +186,7 @@ export default function AssignmentsPage() {
 
                       {status === 'pending' ? (
                         <Link
-                          href={`/assignments/${assignment.id}/submit`}
+                          href={`/assignments/${assignment.id}`}
                           className="bg-green-600 text-white px-4 py-2 rounded-md text-sm hover:bg-green-700 transition-colors"
                         >
                            View Details/Submit

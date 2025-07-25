@@ -127,16 +127,16 @@ export default function DiscussionsPage() {
         ) : (
           <div className="space-y-6">
             {filteredThreads.map(thread => (
+                      <Link href={`/discussions/${thread.id}`}>
+
               <div key={thread.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start flex-1">
                     <MessageSquare className="h-8 w-8 text-blue-600 mt-1" />
                     <div className="ml-4 flex-1">
-                      <Link href={`/discussions/${thread.id}`}>
                         <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 cursor-pointer">
                           {thread.title}
                         </h3>
-                      </Link>
                       <p className="text-gray-600 mt-2 line-clamp-3">{thread.content}</p>
                       
                       <div className="flex items-center space-x-4 mt-4 text-sm text-gray-500">
@@ -167,6 +167,8 @@ export default function DiscussionsPage() {
                   )}
                 </div>
               </div>
+                      </Link>
+
             ))}
           </div>
         )}
