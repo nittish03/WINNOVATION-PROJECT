@@ -24,6 +24,7 @@ export default function NavBar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  
 
   // Handle scroll effect
   useEffect(() => {
@@ -90,7 +91,7 @@ export default function NavBar() {
             </Link>
 
             {session && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 text-xs">
                 {links.map((link) => {
                   const Icon = link.icon
                   const isActive = pathname === link.href
@@ -99,7 +100,7 @@ export default function NavBar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-xs transition-all duration-200 ${
+                      className={`flex items-center text-xs gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
                         isActive
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
                           : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
@@ -121,19 +122,20 @@ export default function NavBar() {
                 <div className="flex items-center space-x-3">
                   {/* User Profile */}
                   <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors duration-200">
-                    <div className="relative h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
-                      {session?.user?.image ? (
-                        <Image 
-                          src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
-                          alt="User profile"
-                          height={28}
-                          width={28}
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <User className="h-4 w-4 text-white" />
-                      )}
-                    </div>
+<div className="relative h-7 w-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden">
+  {session?.user?.image ? (
+    <img 
+      src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
+      alt="User profile"
+      height={28}
+      width={28}
+      className="h-full w-full object-cover object-center"
+    />
+  ) : (
+    <User className="h-4 w-4 text-white" />
+  )}
+</div>
+
                     
                     <div className="flex flex-col">
                       <span className="text-xs font-medium text-gray-900 truncate max-w-24 xl:max-w-32">

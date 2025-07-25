@@ -29,3 +29,51 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function POST(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const courseId = params.id
+
+    const enrollment = await prismaDB.enrollment.create({
+      data: {
+        userId: session.user.id,
+        courseId: courseId
+      }
+    })
+
+    return NextResponse.json(enrollment, { status: 201 })
+  } catch (error) {
+    console.error('Error creating enrollment:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const courseId = params.id
+
+    await prismaDB.enrollment.delete({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId: courseId
+        }
+      }
+    })
+
+    return NextResponse.json({ message: 'Unenrolled successfully' })
+  } catch (error) {
+    console.error('Error deleting enrollment:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

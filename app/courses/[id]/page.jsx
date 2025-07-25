@@ -91,6 +91,20 @@ export default function CourseDetailPage({ params }) {
     }
   }
 
+  const handleUnenroll = async () => {
+    if (!session || !enrollment) return;
+
+    if (confirm("Are you sure you want to unenroll from this course?")) {
+      try {
+        await axios.delete(`/api/courses/${courseId}/enrollment`);
+        toast.success("Successfully unenrolled.");
+        loadCourseData();
+      } catch (error) {
+        toast.error(error.response?.data?.error || "Failed to unenroll.");
+      }
+    }
+  };
+
   const getAssignmentStatus = (assignment) => {
     if (assignment.submissions?.length > 0) return 'submitted'
     if (new Date(assignment.dueDate) < new Date()) return 'overdue'
@@ -204,7 +218,7 @@ export default function CourseDetailPage({ params }) {
                             style={{ width: `${enrollment.progress || 0}%` }}
                           ></div>
                         </div>
-                        <div className="mt-3">
+                        <div className="mt-3 flex justify-center items-center space-x-2">
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             enrollment.status === 'completed' ? 'bg-green-500 text-white' :
                             enrollment.status === 'enrolled' ? 'bg-blue-500 text-white' :
@@ -212,6 +226,12 @@ export default function CourseDetailPage({ params }) {
                           }`}>
                             {enrollment.status}
                           </span>
+                          <button
+                            onClick={handleUnenroll}
+                            className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-red-600 transition-colors"
+                          >
+                            Unenroll
+                          </button>
                         </div>
                       </div>
                     ) : (

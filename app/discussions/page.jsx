@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import axios from "axios"
-import { MessageSquare, Plus, Calendar, User } from "lucide-react"
+import { MessageSquare, Plus, Calendar, User, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 
@@ -44,6 +44,18 @@ export default function DiscussionsPage() {
     }
   }
 
+  const handleDelete = async (threadId) => {
+    if (confirm("Are you sure you want to delete this discussion?")) {
+      try {
+        await axios.delete(`/api/discussions/${threadId}`);
+        toast.success("Discussion deleted successfully!");
+        loadThreads();
+      } catch (error) {
+        toast.error("Failed to delete discussion");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -81,7 +93,7 @@ export default function DiscussionsPage() {
             {threads.map(thread => (
               <div key={thread.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start">
+                  <div className="flex items-start flex-1">
                     <MessageSquare className="h-8 w-8 text-blue-600 mt-1" />
                     <div className="ml-4 flex-1">
                       <Link href={`/discussions/${thread.id}`}>
@@ -109,6 +121,14 @@ export default function DiscussionsPage() {
                       </div>
                     </div>
                   </div>
+                  {(session?.user?.role === 'admin' || session?.user?.id === thread.authorId) && (
+                    <button
+                      onClick={() => handleDelete(thread.id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

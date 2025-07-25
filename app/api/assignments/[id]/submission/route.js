@@ -90,6 +90,30 @@ export async function POST(request, { params }) {
       }
     })
 
+    // Update course progress
+    const totalAssignments = await prismaDB.assignment.count({
+      where: { courseId: assignment.courseId }
+    })
+
+    const submittedAssignments = await prismaDB.submission.count({
+      where: {
+        user: { id: session.user.id },
+        assignment: { courseId: assignment.courseId }
+      }
+    })
+
+    const progress = totalAssignments > 0 ? (submittedAssignments / totalAssignments) * 100 : 0
+
+    await prismaDB.enrollment.update({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId: assignment.courseId
+        }
+      },
+      data: { progress: Math.round(progress) }
+    })
+
     return NextResponse.json(submission)
   } catch (error) {
     console.error('Error creating submission:', error)
