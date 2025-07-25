@@ -47,3 +47,34 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+    const thread = await prismaDB.discussionThread.findUnique({
+      where: { id: id }
+    })
+
+    if (!thread) {
+      return NextResponse.json({ error: 'Discussion not found' }, { status: 404 })
+    }
+
+    if (session.user.role !== 'admin' && session.user.id !== thread.authorId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    await prismaDB.discussionReply.deleteMany({
+      where: { threadId: id }
+    })
+    
+    return NextResponse.json({ message: 'All replies deleted successfully' })
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

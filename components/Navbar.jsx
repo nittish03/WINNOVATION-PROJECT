@@ -57,6 +57,7 @@ export default function NavBar() {
     { href: "/admin/courses", label: "Manage Courses", icon: BookOpen },
     { href: "/admin/assignments", label: "Assignments", icon: FileText },
     { href: "/admin/analytics", label: "Analytics", icon: Settings },
+    { href: "/discussions", label: "Discussions", icon: MessageSquare },
   ]
 
   const instructorLinks = [

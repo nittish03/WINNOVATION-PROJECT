@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
-import { MessageSquare, ArrowLeft, User, Calendar, Send } from "lucide-react"
+import { MessageSquare, ArrowLeft, User, Calendar, Send, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
 import Image from "next/image"
@@ -17,13 +17,14 @@ export default function DiscussionThreadPage() {
   const [replies, setReplies] = useState([])
   const [loading, setLoading] = useState(true)
   const [replyContent, setReplyContent] = useState("")
+  const [reload, setReload] = useState(false)
 
   useEffect(() => {
     if (id) {
       loadThread()
       loadReplies()
     }
-  }, [id])
+  }, [id, reload])
 
   const loadThread = async () => {
     try {
@@ -56,12 +57,36 @@ export default function DiscussionThreadPage() {
         content: replyContent,
       })
       setReplyContent("")
-      loadReplies()
+      setReload(!reload)
       toast.success("Reply posted successfully!")
     } catch (error) {
       toast.error("Failed to post reply.")
     }
   }
+
+  const handleDeleteReply = async (replyId) => {
+    if (confirm("Are you sure you want to delete this reply?")) {
+      try {
+        await axios.delete(`/api/discussions/${id}/replies/${replyId}`);
+        toast.success("Reply deleted successfully!");
+        setReload(!reload);
+      } catch (error) {
+        toast.error("Failed to delete reply.");
+      }
+    }
+  };
+
+  const handleDeleteAllReplies = async () => {
+    if (confirm("Are you sure you want to delete ALL replies in this thread? This action cannot be undone.")) {
+      try {
+        await axios.delete(`/api/discussions/${id}/replies`);
+        toast.success("All replies have been deleted.");
+        setReload(!reload);
+      } catch (error) {
+        toast.error("Failed to delete all replies.");
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -103,7 +128,18 @@ export default function DiscussionThreadPage() {
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Replies</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Replies ({replies.length})</h2>
+            {(session?.user?.role === 'admin' || session?.user?.id === thread?.authorId) && replies.length > 0 && (
+              <button
+                onClick={handleDeleteAllReplies}
+                className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors flex items-center"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete All
+              </button>
+            )}
+          </div>
           <div className="space-y-4">
             {replies.map((reply) => (
               <div key={reply.id} className="flex items-start space-x-4">
@@ -125,11 +161,21 @@ export default function DiscussionThreadPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{reply.author?.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(reply.createdAt).toLocaleString()}
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-xs text-gray-500">
+                        {new Date(reply.createdAt).toLocaleString()}
+                      </p>
+                      {(session?.user?.role === 'admin' || session?.user?.id === reply.authorId) && (
+                        <button
+                          onClick={() => handleDeleteReply(reply.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-gray-700">{reply.content}</p>
+                  <p className="text-gray-700 mt-1">{reply.content}</p>
                 </div>
               </div>
             ))}
