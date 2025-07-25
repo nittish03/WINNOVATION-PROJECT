@@ -6,6 +6,7 @@ import axios from "axios"
 import { MessageSquare, ArrowLeft, User, Calendar, Send } from "lucide-react"
 import Link from "next/link"
 import { toast } from "react-toastify"
+import Image from "next/image"
 
 export default function DiscussionThreadPage() {
   const params = useParams();
@@ -106,9 +107,21 @@ export default function DiscussionThreadPage() {
           <div className="space-y-4">
             {replies.map((reply) => (
               <div key={reply.id} className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <User className="h-8 w-8 text-gray-400" />
-                </div>
+<div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+  {session?.user?.image ? (
+    <Image
+      src={`/api/image-proxy?url=${encodeURIComponent(session.user.image)}`}
+      alt={session?.user?.name}
+      width={40}
+      height={40}
+      className="w-full h-full object-cover"
+      priority={true}
+    />
+  ) : (
+    <User className="h-6 w-6 text-gray-400" />
+  )}
+</div>
+
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold">{reply.author?.name}</p>
