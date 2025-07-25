@@ -24,6 +24,27 @@ export async function PATCH(request, { params }) {
   }
 }
 
+export async function PUT(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { title, description, skillId } = await request.json()
+    const { id } = await params;
+    
+    const course = await prismaDB.course.update({
+      where: { id: id },
+      data: { title, description, skillId }
+    })
+    
+    return NextResponse.json(course)
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions)

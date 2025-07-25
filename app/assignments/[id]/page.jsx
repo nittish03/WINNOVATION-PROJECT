@@ -38,7 +38,7 @@ export default function AssignmentDetailPage({ params }) {
 
   useEffect(() => {
     if (!session) {
-      router.push('/auth/signin')
+      router.push('/login')
       return
     }
     loadAssignmentData()

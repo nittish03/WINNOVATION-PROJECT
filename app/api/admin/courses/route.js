@@ -29,3 +29,30 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
+export async function POST(req) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { title, description, skillId } = await req.json()
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    }
+
+    const course = await prismaDB.course.create({
+      data: {
+        title,
+        description,
+        createdById: session.user.id,
+        ...(skillId && { skillId }),
+      }
+    })
+
+    return NextResponse.json(course, { status: 201 })
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

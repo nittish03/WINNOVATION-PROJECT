@@ -39,7 +39,7 @@ export default function CourseDetailPage({ params }) {
 
   useEffect(() => {
     if (!session) {
-      router.push('/auth/signin')
+      router.push('/login')
       return
     }
     loadCourseData()
@@ -269,9 +269,12 @@ export default function CourseDetailPage({ params }) {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                               <h3 className="font-medium text-gray-900">{assignment.title}</h3>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+                              {
+                                session?.user?.role === 'student' && 
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
                                 {status}
                               </span>
+                              }
                             </div>
                             <p className="text-gray-600 text-sm mb-3">{assignment.description}</p>
                             <div className="flex items-center text-sm text-gray-500 space-x-4">
