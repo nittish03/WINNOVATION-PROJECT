@@ -5,7 +5,8 @@ import { authOptions } from '@/lib/authOptions'
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const replies = await prismaDB.discussionReply.findMany({
       where: { threadId: id },
       include: {
@@ -26,7 +27,8 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const { content } = await request.json()
 
     if (!content.trim()) {

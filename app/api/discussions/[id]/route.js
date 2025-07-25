@@ -5,7 +5,8 @@ import { authOptions } from '@/lib/authOptions'
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const thread = await prismaDB.discussionThread.findUnique({
       where: { id: id },
       include: {
@@ -28,7 +29,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const thread = await prismaDB.discussionThread.findUnique({
       where: { id: id }
     })

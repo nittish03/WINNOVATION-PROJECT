@@ -37,7 +37,8 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const courseId = params.id
+    const resolvedParams = await params
+    const courseId = resolvedParams.id
 
     const enrollment = await prismaDB.enrollment.create({
       data: {
@@ -60,7 +61,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const courseId = params.id
+    const resolvedParams = await params
+    const courseId = resolvedParams.id
 
     await prismaDB.enrollment.delete({
       where: {

@@ -370,10 +370,10 @@ export default function AdminCoursesPage() {
                             href={`/courses/${course.id}`}
                             className="text-blue-600 hover:text-blue-900"
                           >
-                            <Eye className="h-4 w-4" />
+                            {course.publishedAt && <Eye className="h-4 w-4" />}
                           </Link>
                           <button onClick={() => handleEditClick(course)} className="text-green-600 hover:text-green-900">
-                            <Edit className="h-4 w-4" />
+                            {course.publishedAt && <Edit className="h-4 w-4" />}
                           </button>
                           <button
                             onClick={() => handleDelete(course.id)}

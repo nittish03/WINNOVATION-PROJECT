@@ -11,7 +11,8 @@ export async function PATCH(request, { params }) {
     }
 
     const { publishedAt } = await request.json()
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     
     const course = await prismaDB.course.update({
       where: { id: id },
@@ -32,7 +33,8 @@ export async function PUT(request, { params }) {
     }
 
     const { title, description, skillId } = await request.json()
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     
     const course = await prismaDB.course.update({
       where: { id: id },
@@ -52,7 +54,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await params;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     await prismaDB.course.delete({
       where: { id: id }
     })
