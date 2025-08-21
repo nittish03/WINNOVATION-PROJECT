@@ -31,7 +31,7 @@ async function main() {
     const admin = await prisma.user.create({
       data: {
         name: 'Admin User',
-        email: 'admin@skillportal.com',
+        email: 'admin@gmail.com',
         hashedPassword: adminPassword,
         role: 'admin',
         university: 'SkillPortal University',

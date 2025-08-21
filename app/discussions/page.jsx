@@ -17,6 +17,8 @@ export default function DiscussionsPage() {
     content: ''
   })
   const [searchTerm, setSearchTerm] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     loadThreads()
@@ -46,6 +48,7 @@ export default function DiscussionsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       await axios.post('/api/discussions', formData)
       toast.success('Discussion created successfully!')
@@ -54,17 +57,22 @@ export default function DiscussionsPage() {
       loadThreads()
     } catch (error) {
       toast.error('Failed to create discussion')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const handleDelete = async (threadId) => {
     if (confirm("Are you sure you want to delete this discussion?")) {
+      setDeletingId(threadId)
       try {
         await axios.delete(`/api/discussions/${threadId}`);
         toast.success("Discussion deleted successfully!");
         loadThreads();
       } catch (error) {
         toast.error("Failed to delete discussion");
+      } finally {
+        setDeletingId(null)
       }
     }
   };
@@ -159,10 +167,18 @@ export default function DiscussionsPage() {
                   </div>
                   {(session?.user?.role === 'admin' || session?.user?.id === thread.authorId) && (
                     <button
-                      onClick={() => handleDelete(thread.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDelete(thread.id);
+                      }}
                       className="text-red-500 hover:text-red-700"
+                      disabled={deletingId === thread.id}
                     >
-                      <Trash2 className="h-5 w-5" />
+                      {deletingId === thread.id ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500"></div>
+                      ) : (
+                        <Trash2 className="h-5 w-5" />
+                      )}
                     </button>
                   )}
                 </div>
@@ -202,13 +218,14 @@ export default function DiscussionsPage() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-                    Create Discussion
+                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating...' : 'Create Discussion'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowForm(false)}
                     className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </button>

@@ -20,6 +20,8 @@ export default function AdminSkillsPage() {
     description: '',
     category: 'General'
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     if (!session || session.user.role !== 'admin') {
@@ -43,6 +45,7 @@ export default function AdminSkillsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       if (editingSkill) {
         await axios.put(`/api/admin/skills/${editingSkill.id}`, formData)
@@ -57,6 +60,8 @@ export default function AdminSkillsPage() {
       loadSkills()
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to save skill')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -72,12 +77,15 @@ export default function AdminSkillsPage() {
 
   const handleDelete = async (skillId) => {
     if (confirm('Are you sure you want to delete this skill?')) {
+      setDeletingId(skillId)
       try {
         await axios.delete(`/api/admin/skills/${skillId}`)
         toast.success('Skill deleted successfully!')
         loadSkills()
       } catch (error) {
         toast.error('Failed to delete skill')
+      } finally {
+        setDeletingId(null)
       }
     }
   }
@@ -164,15 +172,21 @@ export default function AdminSkillsPage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleEdit(skill)}
-                    className="text-blue-600 hover:text-blue-900"
+                    className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+                    disabled={deletingId === skill.id}
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(skill.id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                    disabled={deletingId === skill.id}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deletingId === skill.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -232,8 +246,8 @@ export default function AdminSkillsPage() {
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-                    {editingSkill ? 'Update' : 'Create'}
+                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : (editingSkill ? 'Update' : 'Create')}
                   </button>
                   <button
                     type="button"
@@ -242,6 +256,7 @@ export default function AdminSkillsPage() {
                       setEditingSkill(null)
                     }}
                     className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </button>

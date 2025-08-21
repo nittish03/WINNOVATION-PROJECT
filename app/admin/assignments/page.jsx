@@ -25,6 +25,8 @@ export default function AdminAssignmentsPage() {
     dueDate: '',
     maxPoints: 100
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     if (!session || session.user.role !== 'admin') {
@@ -52,6 +54,7 @@ export default function AdminAssignmentsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       if (editingAssignment) {
         await axios.put(`/api/admin/assignments/${editingAssignment.id}`, formData)
@@ -72,6 +75,8 @@ export default function AdminAssignmentsPage() {
       loadData()
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to save assignment')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -89,12 +94,15 @@ export default function AdminAssignmentsPage() {
 
   const handleDelete = async (assignmentId) => {
     if (confirm('Are you sure you want to delete this assignment?')) {
+      setDeletingId(assignmentId)
       try {
         await axios.delete(`/api/admin/assignments/${assignmentId}`)
         toast.success('Assignment deleted successfully!')
         loadData()
       } catch (error) {
         toast.error('Failed to delete assignment')
+      } finally {
+        setDeletingId(null)
       }
     }
   }
@@ -289,6 +297,7 @@ export default function AdminAssignmentsPage() {
                             onClick={() => handleEdit(assignment)}
                             className="text-green-600 hover:text-green-900"
                             title="Edit Assignment"
+                            disabled={deletingId === assignment.id}
                           >
                             <Edit className="h-4 w-4" />
                           </button>
@@ -296,8 +305,13 @@ export default function AdminAssignmentsPage() {
                             onClick={() => handleDelete(assignment.id)}
                             className="text-red-600 hover:text-red-900"
                             title="Delete Assignment"
+                            disabled={deletingId === assignment.id}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {deletingId === assignment.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -419,8 +433,8 @@ export default function AdminAssignmentsPage() {
                 </div>
                 
                 <div className="flex gap-2 pt-4">
-                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
-                    {editingAssignment ? 'Update Assignment' : 'Create Assignment'}
+                  <button type="submit" className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400" disabled={isSubmitting}>
+                    {isSubmitting ? 'Saving...' : (editingAssignment ? 'Update Assignment' : 'Create Assignment')}
                   </button>
                   <button
                     type="button"
@@ -429,6 +443,7 @@ export default function AdminAssignmentsPage() {
                       setEditingAssignment(null)
                     }}
                     className="flex-1 bg-gray-600 text-white py-2 rounded-md hover:bg-gray-700"
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </button>

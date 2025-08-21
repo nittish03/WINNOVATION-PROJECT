@@ -29,6 +29,9 @@ export default function AdminUsersPage() {
     degree: '',
     branch: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
 
   useEffect(() => {
     if (!session || session.user.role !== 'admin') {
@@ -63,6 +66,7 @@ export default function AdminUsersPage() {
   }
 
   const handleSaveEdit = async () => {
+    setIsUpdating(true)
     try {
       await axios.put(`/api/admin/users/${editingUser}`, editForm)
       toast.success('User updated successfully!')
@@ -71,6 +75,8 @@ export default function AdminUsersPage() {
     } catch (error) {
       console.error('Error updating user:', error)
       toast.error('Failed to update user')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -88,18 +94,22 @@ export default function AdminUsersPage() {
 
   const handleDeleteUser = async (userId) => {
     if (confirm('Are you sure you want to delete this user?')) {
+      setDeletingId(userId)
       try {
         await axios.delete(`/api/admin/users/${userId}`)
         toast.success('User deleted successfully!')
         loadUsers()
       } catch (error) {
         toast.error('Failed to delete user')
+      } finally {
+        setDeletingId(null)
       }
     }
   }
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true)
     try {
       await axios.post('/api/admin/users', createForm);
       toast.success('User created successfully!');
@@ -109,6 +119,8 @@ export default function AdminUsersPage() {
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error(error.response?.data?.error || 'Failed to create user');
+    } finally {
+      setIsSubmitting(false)
     }
   };
 
@@ -302,14 +314,20 @@ export default function AdminUsersPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={handleSaveEdit}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:bg-green-400"
+                              disabled={isUpdating}
                             >
-                              <Save className="h-3 w-3 mr-1" />
-                              Save
+                              {isUpdating ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                              ) : (
+                                <Save className="h-3 w-3 mr-1" />
+                              )}
+                              {isUpdating ? 'Saving...' : 'Save'}
                             </button>
                             <button
                               onClick={handleCancelEdit}
                               className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                              disabled={isUpdating}
                             >
                               <X className="h-3 w-3 mr-1" />
                               Cancel
@@ -358,16 +376,21 @@ export default function AdminUsersPage() {
                               onClick={() => handleEditUser(user)}
                               className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
                               title="Edit user"
+                              disabled={deletingId === user.id}
                             >
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
                               className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              disabled={user.id === session?.user?.id}
+                              disabled={user.id === session?.user?.id || deletingId === user.id}
                               title="Delete user"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deletingId === user.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </button>
                           </div>
                         </td>
@@ -453,9 +476,10 @@ export default function AdminUsersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isSubmitting}
                 >
-                  Create User
+                  {isSubmitting ? 'Creating...' : 'Create User'}
                 </button>
               </div>
             </form>

@@ -29,6 +29,9 @@ export default function AdminCoursesPage() {
     skillId: '',
   });
   const [skills, setSkills] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [publishingId, setPublishingId] = useState(null);
 
   useEffect(() => {
     if (!session || session.user.role !== "admin") {
@@ -95,17 +98,21 @@ export default function AdminCoursesPage() {
 
   const handleDelete = async (courseId) => {
     if (confirm("Are you sure you want to delete this course?")) {
+      setDeletingId(courseId);
       try {
         await axios.delete(`/api/admin/courses/${courseId}`);
         toast.success("Course deleted successfully!");
         loadCourses();
       } catch (error) {
         toast.error("Failed to delete course");
+      } finally {
+        setDeletingId(null);
       }
     }
   };
 
   const togglePublish = async (courseId, currentStatus) => {
+    setPublishingId(courseId);
     try {
       await axios.patch(`/api/admin/courses/${courseId}`, {
         publishedAt: currentStatus ? null : new Date(),
@@ -114,6 +121,8 @@ export default function AdminCoursesPage() {
       loadCourses();
     } catch (error) {
       toast.error("Failed to update course status");
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -130,7 +139,7 @@ export default function AdminCoursesPage() {
   const handleUpdateCourse = async (e) => {
     e.preventDefault();
     if (!editingCourse) return;
-
+    setIsSubmitting(true);
     try {
       await axios.put(`/api/admin/courses/${editingCourse.id}`, editFormData);
       toast.success("Course updated successfully!");
@@ -139,11 +148,14 @@ export default function AdminCoursesPage() {
       loadCourses();
     } catch (error) {
       toast.error("Failed to update course");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       await axios.post("/api/admin/courses", createFormData);
       toast.success("Course created successfully!");
@@ -152,6 +164,8 @@ export default function AdminCoursesPage() {
       loadCourses();
     } catch (error) {
       toast.error("Failed to create course");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -357,8 +371,13 @@ export default function AdminCoursesPage() {
                               ? "bg-green-100 text-green-800 hover:bg-green-200"
                               : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                           }`}
+                          disabled={publishingId === course.id}
                         >
-                          {course.publishedAt ? "Published" : "Draft/Publish"}
+                          {publishingId === course.id ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-800"></div>
+                          ) : (
+                            course.publishedAt ? "Published" : "Draft/Publish"
+                          )}
                         </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -372,14 +391,19 @@ export default function AdminCoursesPage() {
                           >
                             {course.publishedAt && <Eye className="h-4 w-4" />}
                           </Link>
-                          <button onClick={() => handleEditClick(course)} className="text-green-600 hover:text-green-900">
+                          <button onClick={() => handleEditClick(course)} className="text-green-600 hover:text-green-900" disabled={deletingId === course.id}>
                             {course.publishedAt && <Edit className="h-4 w-4" />}
                           </button>
                           <button
                             onClick={() => handleDelete(course.id)}
                             className="text-red-600 hover:text-red-900"
+                            disabled={deletingId === course.id}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {deletingId === course.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -440,9 +464,10 @@ export default function AdminCoursesPage() {
               <div className="flex gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isSubmitting}
                 >
-                  Update Course
+                  {isSubmitting ? 'Updating...' : 'Update Course'}
                 </button>
                 <button
                   type="button"
@@ -493,7 +518,7 @@ export default function AdminCoursesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Related Skill</label>
                 <select
                   value={createFormData.skillId}
-                  onChange={(e) => setCreateFormData({ ...createFormData, skillId: e.targe.value })}
+                  onChange={(e) => setCreateFormData({ ...createFormData, skillId: e.target.value })}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-white"
                 >
                   <option value="">Select a skill</option>
@@ -505,9 +530,10 @@ export default function AdminCoursesPage() {
               <div className="flex gap-2 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isSubmitting}
                 >
-                  Create Course
+                  {isSubmitting ? 'Creating...' : 'Create Course'}
                 </button>
                 <button
                   type="button"

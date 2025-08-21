@@ -31,6 +31,9 @@ export default function UserSkillsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSkill, setEditingSkill] = useState(null);
   const [selectedSkills, setSelectedSkills] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
   useEffect(() => {
     if (!session) {
@@ -61,23 +64,29 @@ export default function UserSkillsPage() {
   };
 
   const updateSkillLevel = async (userSkillId, newLevel) => {
+    setUpdatingId(userSkillId);
     try {
       await axios.patch(`/api/user-skills/${userSkillId}`, { level: newLevel });
       toast.success("Skill level updated!");
       loadData();
     } catch (error) {
       toast.error("Failed to update skill level");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
   const removeSkill = async (userSkillId) => {
     if (confirm("Are you sure you want to remove this skill?")) {
+      setRemovingId(userSkillId);
       try {
         await axios.delete(`/api/user-skills/${userSkillId}`);
         toast.success("Skill removed!");
         loadData();
       } catch (error) {
         toast.error("Failed to remove skill");
+      } finally {
+        setRemovingId(null);
       }
     }
   };
@@ -87,7 +96,7 @@ export default function UserSkillsPage() {
       toast.error("Please select at least one skill");
       return;
     }
-
+    setIsSubmitting(true);
     try {
       await axios.post("/api/user-skills", { skills: selectedSkills });
       toast.success(`Added ${selectedSkills.length} skill(s)!`);
@@ -96,6 +105,8 @@ export default function UserSkillsPage() {
       loadData();
     } catch (error) {
       toast.error("Failed to add skills");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -324,14 +335,20 @@ export default function UserSkillsPage() {
                       <button
                         onClick={() => setEditingSkill(userSkill)}
                         className="text-blue-600 hover:text-blue-800 p-1"
+                        disabled={removingId === userSkill.id}
                       >
                         <Edit3 className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => removeSkill(userSkill.id)}
                         className="text-red-600 hover:text-red-800 p-1"
+                        disabled={removingId === userSkill.id}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {removingId === userSkill.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -383,10 +400,15 @@ export default function UserSkillsPage() {
                               );
                               setEditingSkill(null);
                             }}
-                            className="flex-1 bg-green-600 text-white py-1 px-3 rounded text-xs hover:bg-green-700 flex items-center justify-center"
+                            className="flex-1 bg-green-600 text-white py-1 px-3 rounded text-xs hover:bg-green-700 flex items-center justify-center disabled:bg-green-400"
+                            disabled={updatingId === userSkill.id}
                           >
-                            <Save className="h-3 w-3 mr-1" />
-                            Save
+                            {updatingId === userSkill.id ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                            ) : (
+                              <Save className="h-3 w-3 mr-1" />
+                            )}
+                            {updatingId === userSkill.id ? 'Saving...' : 'Save'}
                           </button>
                           <button
                             onClick={() => setEditingSkill(null)}
@@ -522,10 +544,10 @@ export default function UserSkillsPage() {
                         </button>
                         <button
                           onClick={addSkills}
-                          disabled={selectedSkills.length === 0}
+                          disabled={selectedSkills.length === 0 || isSubmitting}
                           className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                         >
-                          Add Selected Skills
+                          {isSubmitting ? 'Adding...' : 'Add Selected Skills'}
                         </button>
                       </div>
                     </div>

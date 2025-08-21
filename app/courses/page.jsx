@@ -19,6 +19,7 @@ export default function CoursesPage() {
     description: '',
     skillId: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -48,6 +49,7 @@ export default function CoursesPage() {
 
   const handleCreateCourse = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       await axios.post('/api/courses', formData)
       toast.success('Course created successfully!')
@@ -56,6 +58,8 @@ export default function CoursesPage() {
       loadData()
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create course')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -162,9 +166,10 @@ export default function CoursesPage() {
                 <div className="flex gap-2 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+                    className="flex-1 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                    disabled={isSubmitting}
                   >
-                    Create Course
+                    {isSubmitting ? 'Creating...' : 'Create Course'}
                   </button>
                   <button
                     type="button"
