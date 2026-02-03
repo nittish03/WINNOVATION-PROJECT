@@ -15,7 +15,13 @@ import {
   FileText, 
   MessageSquare,
   Target,
-  Settings
+  Settings,
+  Wrench,
+  Cloud,
+  Type,
+  QrCode,
+  ChevronDown,
+  Scissors
 } from "lucide-react"
 import Image from "next/image"
 
@@ -24,7 +30,8 @@ export default function NavBar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  
+  const [utilsDropdownOpen, setUtilsDropdownOpen] = useState(false)
+  const utilsDropdownRef = useRef(null)
 
   // Handle scroll effect
   useEffect(() => {
@@ -39,6 +46,17 @@ export default function NavBar() {
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (utilsDropdownRef.current && !utilsDropdownRef.current.contains(event.target)) {
+        setUtilsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const studentLinks = [
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -67,6 +85,13 @@ export default function NavBar() {
     { href: "/discussions", label: "Discussions", icon: MessageSquare },
   ]
 
+  const utilsLinks = [
+    { href: "/googleDrive", label: "Google Drive", icon: Cloud },
+    { href: "/text", label: "Text", icon: Type },
+    { href: "/qr", label: "QR Code", icon: QrCode },
+    { href: "/textUtils", label: "Text Utils", icon: Scissors },
+  ]
+
   const getLinks = () => {
     if (session?.user?.role === "admin") return adminLinks
     if (session?.user?.role === "instructor") return instructorLinks
@@ -74,6 +99,8 @@ export default function NavBar() {
   }
 
   const links = getLinks()
+  
+  const isUtilsActive = pathname === "/googleDrive" || pathname === "/text" || pathname === "/qr" || pathname === "/textUtils"
 
   return (
     <>
@@ -112,6 +139,47 @@ export default function NavBar() {
                     </Link>
                   )
                 })}
+                
+                {/* Utils Dropdown */}
+                <div className="relative" ref={utilsDropdownRef}>
+                  <button
+                    onClick={() => setUtilsDropdownOpen(!utilsDropdownOpen)}
+                    className={`flex items-center text-xs gap-2 px-3 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      isUtilsActive
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md'
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Wrench className="h-4 w-4" />
+                    <span className="text-xs xl:text-sm">Utils</span>
+                    <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${utilsDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {utilsDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      {utilsLinks.map((utilLink) => {
+                        const UtilIcon = utilLink.icon
+                        const isUtilActive = pathname === utilLink.href
+                        
+                        return (
+                          <Link
+                            key={utilLink.href}
+                            href={utilLink.href}
+                            onClick={() => setUtilsDropdownOpen(false)}
+                            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                              isUtilActive
+                                ? 'bg-blue-50 text-blue-600 border-l-2 border-blue-600'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+                            }`}
+                          >
+                            <UtilIcon className="h-4 w-4" />
+                            <span>{utilLink.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -255,6 +323,33 @@ export default function NavBar() {
                         </Link>
                       )
                     })}
+                    
+                    {/* Mobile Utils Section */}
+                    <div className="border-t border-gray-200 pt-2 mt-2">
+                      <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Utils
+                      </div>
+                      {utilsLinks.map((utilLink) => {
+                        const UtilIcon = utilLink.icon
+                        const isUtilActive = pathname === utilLink.href
+                        
+                        return (
+                          <Link
+                            key={utilLink.href}
+                            href={utilLink.href}
+                            className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                              isUtilActive
+                                ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                                : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+                            }`}
+                            onClick={() => setIsOpen(false)}
+                          >
+                            <UtilIcon className="h-5 w-5" />
+                            <span>{utilLink.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
                   </div>
 
                   {/* Mobile Profile Link */}

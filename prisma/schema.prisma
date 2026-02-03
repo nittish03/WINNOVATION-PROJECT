@@ -218,3 +218,44 @@ model DiscussionReply {
   thread DiscussionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   author User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
+
+
+model pdfDetails {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId // Ensure ObjectId type for MongoDB
+  title       String
+  pdf         String
+  password    String?
+  type        String
+  driveFileId String
+  // Optional relation to Folder
+  folderId    String?  @db.ObjectId
+  folder      DriveFolder?  @relation(fields: [folderId], references: [id])
+  dateUploaded DateTime @default(now()) // ✅ Ensure this field exists
+}
+
+model Text {
+    id           String   @id @default(auto()) @map("_id") @db.ObjectId // Ensure ObjectId type for MongoDB
+    title        String?
+    text         String
+    dateUploaded DateTime @default(now()) // ✅ Ensure this field exists
+  // Optional relation to Folder for organizing texts
+  folderId     String?  @db.ObjectId
+  folder       TextFolder?  @relation(fields: [folderId], references: [id])
+}
+
+model DriveFolder {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  driveFolderId  String?
+  createdAt      DateTime @default(now())
+  // Back-reference to Drive files
+  files          pdfDetails[]
+}
+
+model TextFolder {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  createdAt      DateTime @default(now())
+  // Back-reference to Texts
+  texts          Text[]
+}

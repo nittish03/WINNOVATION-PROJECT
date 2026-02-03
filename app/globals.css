@@ -46,4 +46,12 @@
 }
 :root{
   transition: all 0.3s ease-in-out !important;
+  --theme-bg: #1a1a2e;
+  --theme-bg-secondary: #16213e;
+  --theme-primary: #a855f7;
+  --theme-secondary: #ec4899;
+  --theme-accent: #6366f1;
+  --theme-primary-rgb: 168, 85, 247;
+  --theme-secondary-rgb: 236, 72, 153;
+  --theme-accent-rgb: 99, 102, 241;
 }
