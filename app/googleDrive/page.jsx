@@ -781,13 +781,12 @@ export default function GoogleDrive() {
               {uploadQueue.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-300">Queue ({uploadQueue.length})</span>
+                    <span className="text-sm text-gray-700">Queue ({uploadQueue.length})</span>
                     <div className="flex gap-1.5">
                       <button
                         onClick={startUploads}
                         disabled={isUploading}
-                        className="px-2 py-1 disabled:opacity-50 text-white rounded text-xs font-medium transition-colors"
-                        style={{ backgroundColor: 'var(--theme-primary)' }}
+                        className="px-2 py-1 disabled:opacity-50 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium transition-colors"
                         onMouseEnter={(e) => {
                           if (!e.currentTarget.disabled) {
                             e.currentTarget.style.backgroundColor = 'var(--theme-secondary)';
@@ -1064,13 +1063,7 @@ export default function GoogleDrive() {
                               ) : (
                                 <button className="text-left w-full" onClick={() => openFile(file)}>
                                   <h3 
-                                    className="font-medium text-white text-sm truncate transition-colors"
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.color = 'rgba(var(--theme-primary-rgb), 0.8)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.color = 'white';
-                                    }}
+                                    className="font-medium text-gray-900 hover:text-purple-600 text-sm truncate transition-colors"
                                   >
                                     {file.title}
                                   </h3>
@@ -1104,7 +1097,7 @@ export default function GoogleDrive() {
                                   </button>
                                   <button
                                     onClick={() => setEditingFile(null)}
-                                    className="px-1.5 py-1 rounded bg-gray-500/20 text-gray-300 text-xs"
+                                    className="px-1.5 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
                                   >
                                     <FiX size={10} />
                                   </button>
@@ -1113,14 +1106,14 @@ export default function GoogleDrive() {
                                 <>
                                   <button
                                     onClick={() => setEditingFile({ id: file.id, title: file.title })}
-                                    className="px-1.5 py-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 text-xs transition-colors"
+                                    className="px-1.5 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 hover:text-blue-800 text-xs transition-colors"
                                   >
                                     <FiEdit size={10} />
                                   </button>
                                   <button
                                     onClick={() => handleDelete(file.id)}
                                     disabled={deletingFileId === file.id}
-                                    className="px-1.5 py-1 rounded bg-red-500/20 text-red-300 text-xs"
+                                    className="px-1.5 py-1 rounded bg-red-100 hover:bg-red-200 text-red-700 text-xs"
                                   >
                                     {deletingFileId === file.id ? 
                                       <div className="w-3 h-3 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div> : 
@@ -1177,13 +1170,7 @@ export default function GoogleDrive() {
                               ) : (
                                 <div className="flex items-center gap-1 mb-0.5">
                                   <h3 
-                                    className="font-medium text-white text-sm truncate transition-colors"
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.color = 'rgba(var(--theme-primary-rgb), 0.8)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.color = 'white';
-                                    }}
+                                    className="font-medium text-gray-900 hover:text-purple-600 text-sm truncate transition-colors"
                                   >
                                     {file.title}
                                   </h3>
@@ -1237,7 +1224,7 @@ export default function GoogleDrive() {
                                       e.stopPropagation();
                                       setEditingFile({ id: file.id, title: file.title });
                                     }}
-                                    className="p-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 transition-colors"
+                                    className="p-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 hover:text-blue-800 transition-colors"
                                   >
                                     <FiEdit size={10} />
                                   </button>
