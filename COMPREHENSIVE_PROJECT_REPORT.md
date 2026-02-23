@@ -1,545 +1,724 @@
-# Comprehensive Project Report
+# Comprehensive Project Report: WINNOVATION - Student Learning Management System
+
+## Executive Summary
+
+**WINNOVATION** is a comprehensive Student Learning Management System (SLMS) that goes beyond traditional educational platforms. While it provides core LMS features like course management, assignments, and student tracking, its **primary Unique Selling Proposition (USP)** is an integrated suite of utility tools designed to solve real-world problems faced by students in college environments.
+
+### Main USP: Integrated Utility Suite
+
+The platform's standout feature is its **all-in-one utility station** that eliminates the need for students to switch between multiple websites and applications. The utilities are built around a core innovation: **password-protected file access without personal account login**, solving critical problems in shared computing environments like college labs, library computers, and public devices.
+
+---
 
 ## 1. Introduction
 
-This document provides a comprehensive analysis of the WINNOVATION-PROJECT, a web-based learning management system. The analysis covers the project's architecture, technologies used, database schema, and data flow.
+### 1.1 Overview
+
+WINNOVATION is a full-stack web application built as a comprehensive learning management system with an integrated utility suite. The platform serves as both an educational management system and a productivity hub, addressing the unique needs of students in modern academic environments.
+
+**Key Innovation:** The platform decouples file access from personal identity, allowing students to securely access files on any device without logging into personal accounts. This solves critical privacy and security concerns in shared computing environments.
+
+### 1.2 Core Problem Statement & Solution
+
+#### The Real-World Problem
+
+The project was motivated by a real student problem in college labs and shared systems:
+
+**Scenario:** Students often need files on college lab PCs, library computers, or friends' devices. However, logging into personal Gmail, WhatsApp, or cloud drives on public/shared systems is:
+- **Inconvenient:** Requires remembering credentials and going through authentication flows
+- **Risky for Privacy/Security:** Personal accounts remain logged in, risking unauthorized access
+- **Easy to Forget:** Students often forget to log out, leaving accounts vulnerable
+
+#### The Solution: Vault + Password System
+
+Instead of identity-based login, the platform uses a **vault + password system**:
+- Files are stored securely in Google Drive (server-side)
+- Access is controlled by passwords, not personal accounts
+- Files can be retrieved on any device safely
+- No personal account exposure on public machines
+
+**Core Insight:** Decouple file access from personal identity. This makes it especially relevant for:
+- College labs
+- Shared computers
+- Quick cross-device transfers
+- Privacy-conscious users
+
+### 1.3 Aim
+
+The primary aim of this project is to create a **single-station platform** where students can:
+1. Manage their learning (courses, assignments, skills)
+2. Access files securely without personal account login
+3. Generate QR codes for quick sharing
+4. Save and manage text snippets with organizational tools
+5. Use text manipulation utilities (uppercase, lowercase, etc.)
+
+All without leaving the platform or exposing personal credentials on shared devices.
+
+### 1.4 Proposed System
+
+The proposed system is a feature-rich platform that includes:
+
+#### Core LMS Features:
+- **User Authentication:** Secure registration and login with credentials (email/password) and Google OAuth
+- **Role-Based Access Control:** Distinct roles for students, administrators, and instructors
+- **Course Management:** Full CRUD operations for courses with publishing controls
+- **Enrollment System:** Students can enroll in courses and track progress
+- **Assignment & Grading:** Create assignments, submit work, and grade submissions
+- **Skill Tracking:** Track skills associated with courses and users
+- **Discussion Forums:** Course-specific discussion threads and replies
+- **Certificates:** Generate and track completion certificates
+
+#### Utility Suite (Main USP):
+- **Google Drive Integration:** Password-protected file storage and access without personal login
+- **Text Management:** Save, organize, and manage text snippets with folder support
+- **QR Code Generator:** Generate QR codes for URLs, text, or any data
+- **Text Utilities:** Comprehensive text manipulation tools (case conversion, formatting, etc.)
+
+---
 
 ## 2. Technologies Used
 
 The project is built on a modern web development stack:
 
-- **Framework:** Next.js (a React framework)
-- **Database:** MongoDB with Prisma as the Object-Relational Mapper (ORM).
-- **Authentication:** NextAuth.js with a Prisma adapter for session management and user authentication.
-- **Styling:** Tailwind CSS for a utility-first CSS framework.
-- **API:** The application uses Next.js API routes for the backend.
-- **Other notable libraries:**
-    - `axios` for making HTTP requests from the client-side.
-    - `bcryptjs` for hashing user passwords.
-    - `nodemailer` for sending emails (e.g., for verification).
-    - Various UI component libraries like `@radix-ui/react-dialog` and `lucide-react`.
+### Core Technologies:
+- **Framework:** Next.js 15.0.7 (React framework with App Router)
+- **Database:** MongoDB with Prisma as the Object-Relational Mapper (ORM)
+- **Authentication:** NextAuth.js with Prisma adapter for session management
+- **Styling:** Tailwind CSS for utility-first CSS framework
+- **API:** Next.js API routes for the backend
+
+### Key Libraries:
+- **`axios`:** HTTP client for making requests from the client-side
+- **`bcryptjs`:** Password hashing for secure file protection
+- **`react-qr-code`:** QR code generation library
+- **`react-hot-toast`:** Toast notifications for user feedback
+- **`framer-motion`:** Animation library for enhanced UX
+- **`googleapis`:** Google Drive API integration
+- **`nodemailer`:** Email sending for verification
+- **UI Components:** `lucide-react`, `react-icons` for icons
+
+### Caching System:
+- **Custom Cache Module (`lib/cache.ts`):** Implements both client-side and server-side caching
+  - Client-side: `fetchCached` function with TTL support
+  - Server-side: `cache.wrap` and `cache.invalidatePrefix` for API route caching
+
+---
 
 ## 3. Database Schema
 
-The database schema is defined in the `prisma/schema.prisma` file. It uses MongoDB as the database provider. The main models are:
-
-- **`User`**: Stores user information, including name, email, password, role (student, admin, instructor), and relationships to other models.
-- **`Course`**: Represents a course with a title, description, and a creator. It has relationships with `Skill`, `Enrollment`, `Assignment`, etc.
-- **`Skill`**: Defines skills that can be associated with courses and users.
-- **`Enrollment`**: Tracks a user's enrollment in a course, including their progress.
-- **`Assignment`**: Represents an assignment within a course, with a due date and maximum points.
-- **`Submission`**: Stores a user's submission for an assignment.
-- **`Grade`**: Records the grade for a user's submission.
-- **Authentication Models**: `Account`, `Session`, and `VerificationToken` are used by NextAuth.js for authentication.
-- **Discussion Models**: `DiscussionThread` and `DiscussionReply` for course-specific discussions.
-
-## 4. Data Flow
-
-The application follows a typical client-server architecture, with the Next.js framework handling both the frontend and backend.
-
-### Example: Course Data Flow
-
-1.  **Backend API (`app/api/courses/route.js`):**
-    -   A `GET` request to `/api/courses` fetches all published courses from the MongoDB database using Prisma. It also retrieves related data, such as the course creator's name and the associated skill.
-    -   A `POST` request to `/api/courses` allows authenticated admins and instructors to create a new course. The request is handled by the server, which validates the user's role and then creates a new course in the database.
-
-2.  **Frontend (`app/courses/page.jsx`):**
-    -   The `CoursesPage` component is a client-side React component.
-    -   When the component mounts, it uses the `useEffect` hook to send a `GET` request to `/api/courses` using `axios`.
-    -   The fetched course data is stored in the component's state and rendered as a list of courses.
-    -   For students, there is an "Enroll" button for each course. Clicking this button triggers a `POST` request to `/api/enrollments` to enroll the student in the course.
-    -   For admins and instructors, there is a "Create Course" button that opens a form. Submitting the form sends a `POST` request to `/api/courses` to create a new course.
-
-
-The application's authentication is handled by `NextAuth.js`, providing a secure and flexible system for managing user sessions.
-
-1.  **Login Page (`app/login/page.tsx`):** Users are presented with a form to sign in using their email and password, or with a button to sign in with Google.
-2.  **NextAuth.js Configuration (`lib/authOptions.js`):** This file configures the authentication providers:
-    *   **Credentials Provider:** When a user signs in with their email and password, the `authorize` function is called. It retrieves the user from the database, compares the provided password with the hashed password using `bcrypt`, and returns the user object if the credentials are valid.
-    *   **Google Provider:** For Google sign-in, NextAuth.js handles the OAuth 2.0 flow, exchanging an authorization code for an access token and user profile information.
-3.  **Session Management:** The application uses JSON Web Tokens (JWTs) for session management. The `session` callback in `authOptions.js` is used to include additional user information (like the user's role) in the session object.
-
-### 3.2 Student Dashboard
-
-The student dashboard provides a personalized overview of the student's learning journey.
-
-1.  **Frontend (`app/dashboard/page.jsx`):** When a student logs in, they are redirected to the dashboard. The page checks the user's role from the session object and renders the student view. It then makes a GET request to `/api/student/dashboard` to fetch the dashboard data.
-2.  **Backend (`app/api/student/dashboard/route.js`):** This API endpoint retrieves the logged-in user's ID from the session, queries the database for their enrollments, skills, and certificates, and calculates statistics like the number of enrolled and completed courses. It then returns this data to the frontend.
-
-### 3.3 Admin Dashboard
-
-The admin dashboard provides a comprehensive overview of the platform's activity and provides access to management tools.
-
-1.  **Frontend (`app/dashboard/page.jsx`):** If the logged-in user has the "admin" role, the dashboard page renders the admin view and makes a GET request to `/api/admin/dashboard`.
-2.  **Backend (`app/api/admin/dashboard/route.js`):** This endpoint aggregates data from the entire platform, including total user counts, course statistics, and recent activity. It returns a detailed set of statistics and recent data to the admin dashboard.
-
-### 3.4 Course Browsing and Enrollment
-
-Students can browse a list of available courses and enroll in them with a single click.
-
-1.  **Courses Page (`app/courses/page.jsx`):** This page fetches and displays a list of all courses from the `/api/courses` endpoint. For students, it also fetches their current enrollments from `/api/enrollments` to determine which courses they are already enrolled in.
-2.  **Enrollment Action:** When a student clicks the "Enroll" button for a course, the page sends a POST request to `/api/enrollments` with the `courseId`.
-3.  **Backend (`app/api/enrollments/route.js`):** The `POST` handler in this route creates a new `Enrollment` record in the database, linking the logged-in user to the selected course.
-
-### 3.5 User Management (Admin)
-
-Administrators have full CRUD (Create, Read, Update, Delete) functionality for managing users.
-
-1.  **User Management Page (`app/admin/users/page.jsx`):** This page provides a table of all users, with options to search, filter, edit, and delete. It also includes a form for creating new users.
-2.  **Backend API (`app/api/admin/users`):**
-    *   **`GET /api/admin/users`:** Retrieves a list of all users.
-    *   **`POST /api/admin/users`:** Creates a new user.
-    *   **`PUT /api/admin/users/[id]`:** Updates an existing user's information.
-    *   **`DELETE /api/admin/users/[id]`:** Deletes a user from the database.
-
-### 3.6 Course Management (Admin)
-
-Administrators have comprehensive control over the platform's courses.
-
-1.  **Course Management Page (`app/admin/courses/page.jsx`):** This page provides a detailed view of all courses, with tools for searching, filtering, and sorting. Administrators can create new courses, edit existing ones, and delete courses. They can also publish or unpublish courses, controlling their visibility to students.
-2.  **Backend API (`app/api/admin/courses`):**
-    *   **`GET /api/admin/courses`:** Retrieves a list of all courses.
-    *   **`POST /api/admin/courses`:** Creates a new course.
-    *   **`PUT /api/admin/courses/[id]`:** Updates a course's details.
-    *   **`PATCH /api/admin/courses/[id]`:** Toggles the published status of a course.
-    *   **`DELETE /api/admin/courses/[id]`:** Deletes a course.
-
-## Chapter 4: Future Scope
-
-*   **Enhanced AI Integration:** The existing integration with Google's Generative AI and Document AI can be expanded to provide features like AI-powered grading, personalized learning paths, and intelligent content recommendations.
-*   **Mobile Application:** A dedicated mobile application could be developed to provide a more accessible learning experience.
-*   **Payment Gateway Integration:** To support paid courses, a payment gateway like Stripe or PayPal could be integrated.
-
-# AI-Optimized Documentation: Online Learning Platform
-
-## Project Summary
-
-- **Project Name:** Online Learning Platform
-- **Description:** A full-stack web application for online education, featuring course management, user authentication, and role-based access control.
-- **Technology Stack:** Next.js, Prisma, MongoDB, NextAuth.js, Tailwind CSS.
-
-## Core Features
-
-### User Authentication
-- **Providers:** Credentials (email/password), Google OAuth.
-- **Session Management:** JWT-based sessions.
-- **Database Adapter:** Prisma adapter for MongoDB.
-- **Key Files:**
-  - `app/login/page.tsx`: Frontend login component.
-  - `lib/authOptions.js`: NextAuth.js configuration.
-  - `prisma/schema.prisma`: User, Account, and Session models.
-
-### Course Management
-- **Functionality:** Create, read, update, and delete courses.
-- **Roles:** Restricted to "admin" users.
-- **API Endpoints:**
-  - `POST /api/admin/courses`: Create a new course.
-  - `GET /api/admin/courses`: Retrieve all courses.
-  - `GET /api/admin/courses/[id]`: Retrieve a single course.
-  - `PUT /api/admin/courses/[id]`: Update a course.
-  - `DELETE /api/admin/courses/[id]`: Delete a course.
-
-### Enrollment
-- **Functionality:** Students can enroll in courses.
-- **API Endpoints:**
-  - `POST /api/courses/[id]/enrollment`: Enroll in a course.
-  - `GET /api/enrollments`: Get all enrollments for the current user.
-
-### Assignments and Submissions
-- **Functionality:** Admins can create assignments; students can submit their work.
-- **API Endpoints:**
-  - `POST /api/admin/assignments`: Create a new assignment.
-  - `POST /api/assignments/[id]/submission`: Submit a solution.
-
-## Database Schema (`prisma/schema.prisma`)
-
-- **User:** Stores user data, including `role` ("student" or "admin").
-- **Course:** Defines the structure of a course.
-- **Enrollment:** Links users to courses.
-- **Assignment:** Contains details about assignments.
-- **Submission:** Stores student submissions.
-- **Grade:** Holds grading information for submissions.
-- **Skill:** Represents skills that can be learned.
-- **UserSkill:** Maps skills to users.
-
-## Getting Started
-
-1.  **Install Dependencies:** `npm install`
-2.  **Set up Environment Variables:** Create a `.env` file and provide the necessary database and auth credentials.
-3.  **Run Migrations:** `npx prisma db push`
-4.  **Start the Development Server:** `npm run dev`
-
-# Web Application Documentation
-
-This document provides a detailed explanation of the web application's architecture, features, and functionality.
-
-## 1. Project Overview
-
-This is a full-stack web application built with Next.js. Based on the file structure and dependencies, it appears to be an online learning platform with features for students and administrators. Key functionalities include user authentication, course enrollment, assignment submission, grading, and discussion forums. The application also integrates with Google's Generative AI and Document AI, suggesting advanced features like automated document processing or AI-powered assistance.
-
-## 2. Technologies Used
-
-*   **Framework:** Next.js
-*   **Database ORM:** Prisma
-*   **Database:** MongoDB
-*   **Authentication:** NextAuth.js
-*   **Styling:** Tailwind CSS
-*   **UI Components:** Radix UI, lucide-react
-*   **File Handling:** Cloudinary, Vercel Blob, Multer
-*   **API & Backend:** Next.js API routes, next-connect
-*   **Email:** Nodemailer
-*   **AI:** Google Generative AI, Google Document AI
-
-## 3. Database Schema
-
-The database schema is defined in `prisma/schema.prisma` and includes the following models:
-
-*   **User:** Stores user information, including roles (student, admin).
-*   **Course:** Represents a course with a title, description, and associated skill.
-*   **Enrollment:** Manages user enrollment in courses.
-*   **Assignment:** Defines assignments for courses.
-*   **Submission:** Stores user submissions for assignments.
-*   **Grade:** Records grades for submissions.
-*   **Skill:** Represents skills that can be associated with courses and users.
-*   **UserSkill:** Tracks the skills acquired by users.
-*   **Certificate:** Stores information about certificates issued to users.
-*   **DiscussionThread & DiscussionReply:** Power the discussion forums.
-*   **Account, Session, VerificationToken:** Used by NextAuth.js for authentication.
-*   **NonVerifiedUser:** Temporarily stores user information during the email verification process.
-
-## 4. API Routes
-
-The application's API is built with Next.js API routes and is organized into the following directories:
-
-*   `/api/admin`: Endpoints for administrative tasks, such as managing users, courses, and skills.
-*   `/api/assignments`: Endpoints for managing assignments and submissions.
-*   `/api/auth`: Handles user authentication, including registration, login, and OTP verification.
-*   `/api/courses`: Endpoints for managing courses, enrollments, and discussions.
-*   `/api/discussions`: Manages discussion threads and replies.
-*   `/api/enrollments`: Handles course enrollments.
-*   `/api/profile`: Manages user profiles.
-*   `/api/skills`: Endpoints for managing skills.
-*   `/api/student`: Endpoints for student-specific data, such as the dashboard.
-*   `/api/user-skills`: Manages the skills associated with users.
-
-## 5. Frontend Structure
-
-The frontend is built with React and Next.js and is organized as follows:
-
-*   `/app`: Contains the main application pages, following the Next.js App Router structure.
-*   `/components`: Reusable UI components used throughout the application.
-*   `/context`: React context providers for state management.
-*   `/lib`: Utility functions and libraries.
-*   `/styles`: Global styles and Tailwind CSS configuration.
-
-The application has a clear separation of concerns, with distinct pages for different features and a well-organized component library.
-
-# Summer Training Report
-
-## On
-
-# An Online Learning Platform
-
-### submitted in partial fulfilment of the requirement for the award of the Degree of
-
-## Bachelor of Technology
-
-### in
-
-## Information Technology
-
-**Submitted By:**
-(Your Name)
-
-**Under the Supervision of:**
-(Your Supervisor's Name)
-
-(Your Enrollment No.)
+The database schema is defined in `prisma/schema.prisma` using MongoDB. The main models are:
+
+### Core LMS Models:
+- **`User`:** Stores user information (name, email, password, role: student/admin/instructor)
+- **`Course`:** Represents courses with title, description, creator, and skill associations
+- **`Skill`:** Defines skills that can be associated with courses and users
+- **`Enrollment`:** Tracks user enrollment in courses with progress tracking
+- **`Assignment`:** Represents assignments within courses (due date, max points)
+- **`Submission`:** Stores user submissions for assignments
+- **`Grade`:** Records grades for submissions
+- **`Certificate`:** Stores certificate information for course completions
+- **`UserSkill`:** Maps skills to users
+
+### Utility Models (New):
+- **`pdfDetails`:** Stores file information for Google Drive integration
+  - Fields: `id`, `title`, `pdf` (file URL), `type`, `dateUploaded`, `folderId`, `password` (hashed), `driveFileId`
+  - Supports password protection via bcrypt hashing
+- **`DriveFolder`:** Organizes files into folders
+  - Fields: `id`, `name`, `createdAt`, `driveFolderId` (Google Drive folder ID)
+- **`Text`:** Stores text snippets with organization
+  - Fields: `id`, `title`, `text`, `dateUploaded`, `folderId`
+- **`TextFolder`:** Organizes text snippets into folders
+  - Fields: `id`, `name`, `createdAt`
+
+### Authentication Models:
+- **`Account`:** OAuth account information (NextAuth.js)
+- **`Session`:** User session data (NextAuth.js)
+- **`VerificationToken`:** Email verification tokens (NextAuth.js)
+- **`NonVerifiedUser`:** Temporary storage during email verification
+
+### Discussion Models:
+- **`DiscussionThread`:** Course-specific discussion threads
+- **`DiscussionReply`:** Replies to discussion threads
 
 ---
 
-# DECLARATION
+## 4. Utility Features (Main USP) - Detailed Documentation
 
-This is to certify that the Report entitled “An Online Learning Platform” submitted in partial fulfillment of the requirement for the award of the degree Bachelor of Technology in Information Technology comprises only my original work and due acknowledgement has been made in the text to all other material used.
+### 4.1 Google Drive Integration
 
-**Date:** (Current Date)
+#### 4.1.1 Problem Solved
+Students need to access files on shared computers (college labs, library PCs) without logging into personal Google accounts, which poses security and privacy risks.
 
-**Name:** (Your Name)
-**Enrollment No.:** (Your Enrollment No.)
-**Signature:** \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+#### 4.1.2 Solution Architecture
+- **Server-Side Storage:** Files are uploaded to Google Drive using a service account
+- **Password Protection:** Files can be protected with passwords (hashed using bcrypt)
+- **No Personal Login Required:** Access is granted via password, not user authentication
+- **Folder Organization:** Files can be organized into folders for better management
 
----
+#### 4.1.3 Technical Implementation
 
-# ACKNOWLEDGEMENT
+**Frontend (`app/googleDrive/page.jsx`):**
+- File upload with drag-and-drop support
+- Chunked upload for large files (1MB chunks) with resume capability
+- Upload queue management with progress tracking
+- Grid and list view modes
+- Folder navigation sidebar
+- Password-protected file access modal
+- Bulk file selection and deletion (admin only)
+- Real-time upload progress with speed and time remaining
 
-I take this opportunity to express my sincere gratitude to all those who have guided and supported me in the successful completion of this project. This project has been a valuable learning experience, enabling me to gain practical knowledge of full-stack web development and its application in creating a professional online learning platform.
+**Backend API (`app/api/googleDrive/route.js`):**
+- **GET `/api/googleDrive`:** Fetch files (optionally filtered by folderId)
+  - Returns: `{ success: true, data: [...] }`
+  - Files include: `id`, `title`, `pdf` (URL), `type`, `dateUploaded`, `folderId`, `isProtected`
+  - Passwords are never returned; only `isProtected` flag
+  - Cached for 60 seconds using server-side cache
 
-The primary aim of this platform is to create an interactive and user-friendly environment that bridges the gap between students and administrators, providing a seamless and efficient educational experience.
+- **POST `/api/googleDrive`:** Upload files
+  - Supports chunked uploads for large files
+  - Creates file record in `pdfDetails` table
+  - Uploads to Google Drive using service account
+  - Stores Google Drive file ID for future reference
+  - Optional password protection (hashed with bcrypt)
+  - Invalidates cache on successful upload
 
----
+- **PUT `/api/googleDrive`:** 
+  - Update file title
+  - Verify password and return file URL for protected files
+  - Password verification uses bcrypt comparison
 
-# (CERTIFICATE SECTIONS - PLACEHOLDERS)
+- **DELETE `/api/googleDrive`:** Delete files
+  - Removes from database and Google Drive
+  - Invalidates cache
 
----
+**Folder Management (`app/api/googleDrive/folders/route.js`):**
+- **GET `/api/googleDrive/folders`:** Fetch all folders with file counts
+- **POST `/api/googleDrive/folders`:** Create new folder
+  - Creates folder in Google Drive
+  - Stores folder record in `DriveFolder` table
+- **PUT `/api/googleDrive/folders/[id]`:** Update folder name
+- **DELETE `/api/googleDrive/folders/[id]`:** Delete folder and all files within
 
-# TABLE OF CONTENTS
+**Key Features:**
+- Chunked upload with pause/resume functionality
+- Upload queue with status tracking (pending, uploading, paused, completed, failed)
+- Real-time progress indicators (percentage, speed, time remaining)
+- Password-protected file access without personal login
+- Folder-based organization
+- Admin controls for bulk operations
 
-*   **Chapter 1: Introduction**
-    *   1.1 Overview
-    *   1.2 Aim
-    *   1.3 Proposed System
-    *   1.4 Feasibility System
-*   **Chapter 2: Problem Statement**
-    *   2.1 Problem Statement
-    *   2.2 Objectives
-*   **Chapter 3: System Analysis and Design**
-    *   3.1 Requirement Specifications
-    *   3.2 Software Development Lifecycle Model
-    *   3.3 Flowchart Diagram
-*   **Chapter 4: Skills Acquired**
-    *   4.1 Skills Gained
-*   **Chapter 5: Project Undertaken (Working of the Application)**
-    *   5.1 Title and Aim of the Project
-    *   5.2 Tools Applied
-    *   5.3 Techniques Applied
-    *   5.4 Results and Analysis (Detailed Functional Walkthrough)
-*   **Chapter 6: Challenges Faced During Development**
-*   **Chapter 7: Solution Adopted**
-*   **Chapter 8: Future Scope of the Job Portal**
-*   **Chapter 9: Observation and Learning Outcomes**
-*   **Chapter 10: Summary, Conclusion and Suggestions**
-*   **BIBLIOGRAPHY**
+#### 4.1.4 Security Model
+- **Password Hashing:** All file passwords are hashed using bcrypt before storage
+- **No Password Exposure:** Passwords are never returned in API responses
+- **Protected File Flag:** Only `isProtected` boolean is exposed to clients
+- **Secure Access:** Password verification happens server-side only
+- **Service Account:** Google Drive access uses service account credentials (no user OAuth required)
 
----
+### 4.2 Text Management System
 
-# ABSTRACT
+#### 4.2.1 Purpose
+Allows students to save, organize, and manage text snippets (notes, code snippets, quick references) with folder support, similar to file management but for text content.
 
-This project is a full-stack web application designed as a comprehensive online learning platform. In an era where digital education is paramount, this platform provides a centralized, efficient, and user-friendly solution for students and administrators. The application is built using a modern technology stack, including Next.js for the frontend and backend, Prisma for the ORM, and MongoDB as the database.
+#### 4.2.2 Technical Implementation
 
-The platform supports essential features such as role-based access control (students and administrators), secure user authentication, course creation and enrollment, assignment management, and skill tracking. The system is designed to be scalable, secure, and intuitive, addressing the common challenges of online education by providing a structured and engaging learning environment.
+**Frontend (`app/text/page.jsx`):**
+- Text input with character counter
+- Optional title and folder assignment
+- Saved texts list with expand/collapse for long content
+- Edit and delete functionality (admin only)
+- Copy to clipboard feature
+- Folder organization sidebar
+- Search and filter capabilities
 
----
+**Backend API (`app/api/text/route.js`):**
+- **GET `/api/text`:** Fetch text snippets (optionally filtered by folderId)
+  - Returns: `{ success: true, data: [...] }`
+  - Cached for 60 seconds
 
-# CHAPTER 1: INTRODUCTION
+- **POST `/api/text`:** Create new text snippet
+  - Required: `text`
+  - Optional: `title`, `folderId`
+  - Invalidates cache on creation
 
-### 1.1 Overview
+- **PUT `/api/text`:** Update text snippet
+  - Updates `title`, `text`, or `folderId`
+  - Invalidates cache
 
-This project is an online learning platform designed to connect students and administrators in a seamless digital educational environment. Developed using Next.js, Prisma, and MongoDB, it provides a robust set of features for managing the entire learning lifecycle, from course creation to student enrollment and progress tracking.
+- **DELETE `/api/text`:** Delete text snippet
+  - Invalidates cache
 
-### 1.2 Aim
+**Folder Management (`app/api/text/folders/route.js`):**
+- **GET `/api/text/folders`:** Fetch all text folders
+- **POST `/api/text/folders`:** Create new folder
+- **PUT `/api/text/folders/[id]`:** Update folder name
+- **DELETE `/api/text/folders/[id]`:** Delete folder
 
-The primary aim of this project is to develop a user-friendly and scalable online learning platform that efficiently serves the needs of both students and administrators. The project focuses on creating an interactive and secure application that simplifies the management of educational content and user data.
+**Key Features:**
+- Character counter for text input
+- Folder-based organization
+- Expandable text view for long content
+- Copy to clipboard functionality
+- Edit and delete (admin only)
+- Date tracking for each text snippet
 
-### 1.3 Proposed System
+### 4.3 QR Code Generator
 
-The proposed system is a feature-rich online learning platform that includes:
-*   **User Authentication:** Secure user registration and login with support for both credentials (email/password) and Google OAuth.
-*   **Role-Based Access Control:** Distinct roles for students and administrators, with corresponding permissions and dashboards.
-*   **Course Management:** Functionality for administrators to create, update, and manage courses.
-*   **Enrollment System:** Students can enroll in courses and track their progress.
-*   **Assignment & Grading:** Instructors can create assignments, and students can submit their work for grading.
-*   **Skill Tracking:** The platform allows for the tracking of skills associated with courses and users.
-*   **Discussion Forums:** A dedicated space for students to engage in discussions and collaborate.
+#### 4.3.1 Purpose
+Quick QR code generation for URLs, text, or any data. Useful for sharing links, contact information, or any text-based data that can be scanned.
 
-### 1.4 Feasibility System
+#### 4.3.2 Technical Implementation
 
-The system is technically feasible as it is built on a modern, well-supported technology stack (Next.js, Prisma, MongoDB). It is operationally feasible due to its intuitive user interface, which requires minimal training for both students and administrators.
+**Frontend (`app/qr/page.jsx`):**
+- Real-time QR code generation as user types
+- Animated UI with gradient backgrounds
+- Responsive design with motion effects
+- Copy/share functionality
 
----
+**Technology:**
+- Uses `react-qr-code` library for QR code generation
+- Client-side only (no backend required)
+- Instant generation on input change
 
-# CHAPTER 2: PROBLEM STATEMENT
+**Key Features:**
+- Real-time QR code preview
+- Supports any text or URL input
+- Beautiful animated interface
+- Responsive design
+- No data storage (privacy-focused)
 
-### 2.1 Problem Statement
+### 4.4 Text Utilities
 
-Traditional educational models often lack the flexibility and accessibility required in the modern world. There is a growing need for a centralized online platform where educational institutions can manage their courses, and students can access learning materials and track their progress in a structured manner. This project addresses the need for an integrated system that combines content management, user management, and learning analytics in a single, easy-to-use application.
+#### 4.4.1 Purpose
+Comprehensive text manipulation tools that eliminate the need to visit external websites for common text operations.
 
-### 2.2 Objectives
+#### 4.4.2 Technical Implementation
 
-*   To create a secure and scalable platform for online learning.
-*   To provide distinct, role-based interfaces for students and administrators.
-*   To implement a comprehensive set of features for managing courses, enrollments, assignments, and skills.
-*   To design an intuitive and responsive user interface that works across all devices.
+**Frontend (`app/textUtils/page.jsx`):**
+- Text editor with live preview
+- Multiple text transformation tools
+- Real-time statistics
+- Toast notifications for user feedback
 
----
+**Available Tools:**
+1. **Uppercase:** Convert entire text to uppercase
+2. **Lowercase:** Convert entire text to lowercase
+3. **Title Case:** Capitalize first letter of each word
+4. **Reverse:** Reverse the entire text string
+5. **Remove Extra Spaces:** Remove multiple spaces and trim
+6. **Copy:** Copy text to clipboard
 
-# CHAPTER 3: SYSTEM ANALYSIS AND DESIGN
+**Statistics Display:**
+- Word count
+- Character count (with and without spaces)
+- Sentence count
+- Paragraph count
+- Estimated reading time
 
-### 3.1 Requirement Specifications
-
-*   **Hardware Requirements:** A standard web server for hosting the Next.js application and a database server for MongoDB.
-*   **Software Requirements:** Node.js, npm/yarn, a modern web browser, and a code editor like VS Code.
-
-### 3.2 Software Development Lifecycle Model
-
-The project follows an Agile development methodology, allowing for iterative development and continuous feedback. This approach is well-suited for a web application of this nature, as it allows for flexibility in adapting to new requirements and features.
-
-### 3.3 Flowchart Diagram
-
-The application's workflow is as follows:
-1.  **User Authentication:** A user visits the site and is prompted to log in or sign up. They can use their email/password or Google account.
-2.  **Role-Based Redirection:** Upon successful login, the user is redirected to their respective dashboard based on their role (student or admin).
-3.  **Student Flow:** Students can browse courses, enroll, view their enrolled courses and assignments, and participate in discussions.
-4.  **Admin Flow:** Administrators can manage users, create and manage courses, create assignments, and view platform-wide analytics.
-
----
-
-# CHAPTER 5: PROJECT UNDERTAKEN (WORKING OF THE APPLICATION)
-
-### 5.1 Title and Aim of the Project
-
-*   **Title:** An Online Learning Platform
-*   **Aim:** To create a comprehensive and user-friendly platform for online education.
-
-### 5.2 Tools Applied
-
-*   **Frontend:** Next.js, React, Tailwind CSS
-*   **Backend:** Next.js API Routes
-*   **Database:** MongoDB
-*   **ORM:** Prisma
-*   **Authentication:** NextAuth.js
-
-### 5.3 Techniques Applied
-
-*   **Full-Stack Development:** The application is built as a monolithic full-stack application using Next.js.
-*   **RESTful API Design:** The backend exposes a set of RESTful API endpoints for the frontend to consume.
-*   **Component-Based Architecture:** The frontend is built using a component-based architecture with React.
-*   **Responsive Design:** The UI is fully responsive and works on all screen sizes, thanks to Tailwind CSS.
-
-### 5.4 Results and Analysis (Detailed Functional Walkthrough)
-
-#### 5.4.1 User Authentication
-
-The application's authentication is handled by `NextAuth.js`, providing a secure and flexible system for managing user sessions.
-1.  **Login Page (`app/login/page.tsx`):** Users can sign in with their email and password or with Google.
-2.  **NextAuth.js Configuration (`lib/authOptions.js`):** This file configures the authentication providers and callbacks. The `Credentials Provider` validates email/password logins against the database, while the `Google Provider` handles the OAuth flow.
-3.  **Session Management:** The application uses JWTs for sessions, and the `session` callback enriches the session object with user data like their role.
-
-#### 5.4.2 Student Dashboard
-
-The student dashboard provides a personalized overview of the student's learning journey.
-1.  **Frontend (`app/dashboard/page.jsx`):** When a student logs in, this page renders the student view and makes a GET request to `/api/student/dashboard`.
-2.  **Backend (`app/api/student/dashboard/route.js`):** This API endpoint retrieves the logged-in user's enrollments, skills, and certificates, calculates statistics, and returns the data to the frontend.
-
-#### 5.4.3 Admin Dashboard
-
-The admin dashboard provides a comprehensive overview of the platform's activity.
-1.  **Frontend (`app/dashboard/page.jsx`):** If the user is an admin, this page renders the admin view and makes a GET request to `/api/admin/dashboard`.
-2.  **Backend (`app/api/admin/dashboard/route.js`):** This endpoint aggregates platform-wide data, including user counts, course statistics, and recent activity.
-
-#### 5.4.4 Course Browsing and Enrollment
-
-Students can browse and enroll in courses.
-1.  **Courses Page (`app/courses/page.jsx`):** This page displays all available courses. For students, it also indicates which courses they are already enrolled in.
-2.  **Enrollment Action:** When a student clicks "Enroll," a POST request is sent to `/api/enrollments` with the `courseId`.
-3.  **Backend (`app/api/enrollments/route.js`):** The `POST` handler creates a new `Enrollment` record, linking the user to the course.
-
-#### 5.4.5 User Management (Admin)
-
-Administrators have full CRUD functionality for managing users.
-1.  **User Management Page (`app/admin/users/page.jsx`):** This page provides a table of all users, with options to search, filter, edit, and delete.
-2.  **Backend API (`app/api/admin/users`):** The API provides endpoints for `GET` (all users), `POST` (create user), `PUT` (update user), and `DELETE` (delete user).
-
-#### 5.4.6 Course Management (Admin)
-
-Administrators have comprehensive control over the platform's courses.
-1.  **Course Management Page (`app/admin/courses/page.jsx`):** This page allows admins to create, edit, delete, and publish/unpublish courses.
-2.  **Backend API (`app/api/admin/courses`):** The API provides endpoints for `GET` (all courses), `POST` (create course), `PUT` (update course), `PATCH` (toggle publish status), and `DELETE` (delete course).
+**Key Features:**
+- Live preview of transformed text
+- Real-time statistics calculation
+- All operations are client-side (no backend)
+- Toast notifications for user feedback
+- Responsive grid layout
 
 ---
 
-# CHAPTER 8: FUTURE SCOPE
+## 5. Data Flow & Architecture
 
-*   **Enhanced AI Integration:** Expand the use of AI for features like automated grading and personalized learning paths.
-*   **Mobile Application:** Develop a dedicated mobile app for a better mobile user experience.
-*   **Payment Gateway Integration:** Integrate a payment gateway to support paid courses.
+### 5.1 Overall Architecture
+
+The application follows a client-server architecture with Next.js handling both frontend and backend:
+
+```
+Client (Browser)
+    ↓
+Next.js Frontend (React Components)
+    ↓
+Next.js API Routes (Backend)
+    ↓
+Prisma ORM
+    ↓
+MongoDB Database
+```
+
+### 5.2 Caching Strategy
+
+The platform implements a dual-layer caching system:
+
+**Client-Side Caching (`lib/cache.ts`):**
+- `fetchCached(url, options)`: Wraps fetch requests with caching
+- TTL (Time To Live) support
+- Version-based cache invalidation
+- In-memory cache storage
+
+**Server-Side Caching:**
+- `cache.wrap(key, ttl, fn)`: Wraps database queries with caching
+- `cache.invalidatePrefix(prefix)`: Invalidates related cache entries
+- Used in API routes to reduce database load
+
+**Example Usage:**
+```javascript
+// Client-side
+const data = await fetchCached("/api/googleDrive", { ttlMs: 30000, version: cacheVersion });
+
+// Server-side
+const files = await cache.wrap("gdrive:list:all", 60000, async () => {
+  return await prismaDB.pdfDetails.findMany();
+});
+```
+
+### 5.3 Example Data Flows
+
+#### 5.3.1 Google Drive File Upload Flow
+
+1. **User Action:** User drags file or clicks upload button
+2. **Frontend:** File is added to upload queue with metadata
+3. **Chunking:** Large files are split into 1MB chunks
+4. **Upload:** Each chunk is sent via POST to `/api/googleDrive`
+5. **Backend Processing:**
+   - Validates file and chunk data
+   - Uploads chunk to Google Drive using service account
+   - Updates database with file metadata
+   - Hashes password if provided
+6. **Response:** Returns upload status and progress
+7. **Cache Invalidation:** Cache is invalidated to reflect new file
+8. **UI Update:** Frontend updates progress bar and file list
+
+#### 5.3.2 Password-Protected File Access Flow
+
+1. **User Action:** User clicks on protected file
+2. **Frontend:** Opens password modal
+3. **User Input:** User enters password
+4. **API Call:** PUT request to `/api/googleDrive` with file ID and password
+5. **Backend Processing:**
+   - Retrieves file from database
+   - Compares provided password with hashed password using bcrypt
+   - If match: Returns file URL
+   - If no match: Returns 401 error
+6. **Frontend:** Opens file in new tab if password correct
+
+#### 5.3.3 Text Snippet Creation Flow
+
+1. **User Action:** User types text and clicks save
+2. **Frontend:** Validates input and sends POST to `/api/text`
+3. **Backend Processing:**
+   - Creates record in `Text` table
+   - Associates with folder if specified
+   - Invalidates text cache
+4. **Response:** Returns created text snippet
+5. **UI Update:** Text appears in saved texts list
 
 ---
 
-# BIBLIOGRAPHY
+## 6. Core LMS Features
 
-*   Next.js Documentation: https://nextjs.org/docs
-*   Prisma Documentation: https://www.prisma.io/docs/
-*   NextAuth.js Documentation: https://next-auth.js.org/
-*   Tailwind CSS Documentation: https://tailwindcss.com/docs/
+### 6.1 User Authentication
 
-# Project Report: Online Learning Platform
+**Implementation:**
+- **Login Page (`app/login/page.tsx`):** Email/password or Google OAuth
+- **NextAuth.js Configuration (`lib/authOptions.js`):**
+  - Credentials Provider: Validates email/password with bcrypt
+  - Google Provider: OAuth 2.0 flow
+- **Session Management:** JWT-based sessions with role information
 
-## Chapter 1: Introduction
+### 6.2 Student Dashboard
 
-### 1.1 Overview
+**Frontend (`app/dashboard/page.jsx`):**
+- Personalized overview of learning journey
+- Course progress tracking
+- Skills and certificates display
 
-This document provides a comprehensive analysis of a full-stack web application designed as an online learning platform. The platform connects students and administrators, offering a rich feature set for managing courses, assignments, and user skills. The application is built with a modern technology stack, including Next.js for the frontend and backend, Prisma as the ORM, and MongoDB for the database.
+**Backend (`app/api/student/dashboard/route.js`):**
+- Fetches enrollments, skills, certificates
+- Calculates statistics (enrolled courses, completed courses)
 
-### 1.2 Aim
+### 6.3 Admin Dashboard
 
-The primary aim of this project is to create a robust, scalable, and user-friendly online learning environment. The platform is designed to facilitate a seamless educational experience by providing intuitive tools for both content delivery and administration.
+**Frontend (`app/dashboard/page.jsx`):**
+- Platform-wide analytics
+- User and course statistics
+- Recent activity feed
 
-### 1.3 Proposed System
+**Backend (`app/api/admin/dashboard/route.js`):**
+- Aggregates platform data
+- User counts, course statistics
+- Recent enrollments and submissions
 
-The proposed system is a feature-rich online learning platform that includes:
+### 6.4 Course Management
 
-*   **User Authentication:** Secure user registration and login with support for both credentials (email/password) and Google OAuth.
-*   **Role-Based Access Control:** Distinct roles for students and administrators, with corresponding permissions and dashboards.
-*   **Course Management:** Functionality for administrators to create, update, and manage courses.
-*   **Enrollment System:** Students can enroll in courses and track their progress.
-*   **Assignment & Grading:** Instructors can create assignments, and students can submit their work for grading.
-*   **Skill Tracking:** The platform allows for the tracking of skills associated with courses and users.
-*   **Discussion Forums:** A dedicated space for students to engage in discussions and collaborate.
+**Features:**
+- Create, read, update, delete courses
+- Publish/unpublish controls
+- Skill associations
+- Creator tracking
 
-## Chapter 2: System Analysis and Design
+**API Endpoints:**
+- `GET /api/admin/courses`: List all courses
+- `POST /api/admin/courses`: Create course
+- `PUT /api/admin/courses/[id]`: Update course
+- `PATCH /api/admin/courses/[id]`: Toggle publish status
+- `DELETE /api/admin/courses/[id]`: Delete course
 
-### 2.1 Requirement Specifications
+### 6.5 Enrollment System
 
-#### 2.1.1 Functional Requirements
+**Features:**
+- Students can enroll in courses
+- Progress tracking
+- Enrollment history
 
-*   **User Registration and Login:** Users can create an account using their email and password or by linking their Google account.
-*   **User Roles:** The system supports two main roles: "student" and "admin".
-*   **Admin Dashboard:** Administrators have access to a dashboard for managing users, courses, skills, and enrollments.
-*   **Course Creation:** Admins can create new courses, specifying the title, description, and associated skill.
-*   **Course Enrollment:** Students can browse and enroll in available courses.
-*   **Assignment Management:** Admins can create and manage assignments for each course.
-*   **Submission System:** Students can submit their solutions for assignments.
-*   **Grading:** Admins can grade submissions and provide feedback.
+**API Endpoints:**
+- `GET /api/enrollments`: Get user's enrollments
+- `POST /api/enrollments`: Enroll in course
 
-#### 2.1.2 Non-Functional Requirements
+### 6.6 Assignment & Grading
 
-*   **Security:** The application uses `bcrypt` for password hashing and `NextAuth.js` for secure session management.
-*   **Scalability:** The use of Next.js and a modular architecture allows for future expansion.
-*   **Usability:** The user interface is designed to be intuitive and easy to navigate, with a responsive layout for various devices.
+**Features:**
+- Create assignments with due dates
+- Submit solutions
+- Grade submissions
+- Feedback system
 
-### 2.2 System Design
+**API Endpoints:**
+- `POST /api/admin/assignments`: Create assignment
+- `POST /api/assignments/[id]/submission`: Submit solution
+- `PUT /api/admin/grades`: Grade submission
 
-The application follows a client-server architecture, with a Next.js frontend interacting with a Next.js API backend. The database is managed by Prisma, which provides a type-safe API for database operations.
+---
 
-## Chapter 3: Implementation
+## 7. API Routes Summary
 
-### 3.1 Technology Stack
+### Core LMS APIs:
+- `/api/admin/*`: Administrative endpoints (users, courses, skills, analytics)
+- `/api/assignments`: Assignment management
+- `/api/auth`: Authentication endpoints
+- `/api/courses`: Course browsing and enrollment
+- `/api/discussions`: Discussion threads and replies
+- `/api/enrollments`: Course enrollment
+- `/api/profile`: User profile management
+- `/api/skills`: Skill management
+- `/api/student/*`: Student-specific endpoints
+- `/api/user-skills`: User skill associations
 
-*   **Frontend:** Next.js, React, Tailwind CSS
-*   **Backend:** Next.js API Routes
-*   **Database:** MongoDB
-*   **ORM:** Prisma
-*   **Authentication:** NextAuth.js
-*   **File Uploads:** Cloudinary, Vercel Blob, Multer
+### Utility APIs (New):
+- `/api/googleDrive`: File upload, access, and management
+  - `GET`: Fetch files
+  - `POST`: Upload files (chunked)
+  - `PUT`: Update title or verify password
+  - `DELETE`: Delete files
+- `/api/googleDrive/folders`: Folder management
+  - `GET`: Fetch folders
+  - `POST`: Create folder
+  - `PUT`: Update folder
+  - `DELETE`: Delete folder
+- `/api/text`: Text snippet management
+  - `GET`: Fetch text snippets
+  - `POST`: Create text snippet
+  - `PUT`: Update text snippet
+  - `DELETE`: Delete text snippet
+- `/api/text/folders`: Text folder management
+  - `GET`: Fetch folders
+  - `POST`: Create folder
+  - `PUT`: Update folder
+  - `DELETE`: Delete folder
 
-### 3.2 Key Features and Implementation
+**Note:** QR Code Generator and Text Utilities are client-side only and don't require API endpoints.
 
-#### 3.2.1 User Authentication
+---
 
-The authentication system is built using `NextAuth.js`. It supports two providers:
+## 8. Frontend Structure
 
-1.  **Credentials Provider:** For email and password authentication. Passwords are encrypted using `bcryptjs`.
-2.  **Google Provider:** For OAuth 2.0 authentication with Google.
+### 8.1 Page Organization
 
-The user session is managed using JSON Web Tokens (JWTs), and the session data is enriched with user details from the database on each request.
+**Core LMS Pages:**
+- `/app/dashboard`: Role-based dashboard (student/admin/instructor)
+- `/app/courses`: Course browsing and enrollment
+- `/app/my-courses`: User's enrolled courses
+- `/app/assignments`: Assignment list and submission
+- `/app/skills`: Browse available skills
+- `/app/user-skills`: User's acquired skills
+- `/app/discussions`: Discussion forums
+- `/app/admin/*`: Admin management pages
 
-#### 3.2.2 Course and Enrollment Management
+**Utility Pages (New):**
+- `/app/googleDrive`: Google Drive file management interface
+- `/app/text`: Text snippet management interface
+- `/app/qr`: QR code generator
+- `/app/textUtils`: Text manipulation utilities
 
-The backend provides a set of RESTful API endpoints for managing courses and enrollments. These endpoints are protected, and only users with the "admin" role can create or modify courses. Students can enroll in courses through a dedicated endpoint, which creates an `Enrollment` record in the database.
+### 8.2 Component Structure
 
-## Chapter 4: Future Scope
+**Reusable Components:**
+- `/components/Navbar.jsx`: Main navigation with Utils dropdown
+- `/components/drive/PageHeader.jsx`: Header component for Drive page
+- `/components/drive/SectionCard.jsx`: Card wrapper for sections
 
-*   **Enhanced AI Integration:** The existing integration with Google's Generative AI and Document AI can be expanded to provide features like AI-powered grading, personalized learning paths, and intelligent content recommendations.
-*   **Mobile Application:** A dedicated mobile application could be developed to provide a more accessible learning experience.
-*   **Payment Gateway Integration:** To support paid courses, a payment gateway like Stripe or PayPal could be integrated.
+**Utility Libraries:**
+- `/lib/cache.ts`: Caching utilities (client and server)
+- `/lib/prismaDB.ts`: Prisma database client
+- `/lib/authOptions.js`: NextAuth.js configuration
 
+### 8.3 Navigation Integration
+
+The utilities are integrated into the main navigation:
+- **Desktop:** "Utils" dropdown menu with sub-links
+- **Mobile:** "Utils" section with expandable sub-menu
+- **Active State:** Utils link highlights when on any utility page
+
+---
+
+## 9. Security & Privacy Features
+
+### 9.1 File Access Security
+- **Password Hashing:** All file passwords hashed with bcrypt
+- **No Password Exposure:** Passwords never returned in API responses
+- **Server-Side Verification:** Password checks happen only on server
+- **Protected File Flag:** Only boolean flag exposed to clients
+
+### 9.2 User Authentication
+- **Password Hashing:** User passwords hashed with bcrypt
+- **JWT Sessions:** Secure session management
+- **Role-Based Access:** Admin-only features protected
+
+### 9.3 Data Privacy
+- **No Personal Account Login:** File access doesn't require personal Google account
+- **Service Account:** Google Drive uses service account (no user OAuth)
+- **Secure Storage:** All sensitive data encrypted in database
+
+---
+
+## 10. Problem Statement (Updated)
+
+### 10.1 Primary Problem
+
+Traditional file sharing and access methods in educational environments pose significant challenges:
+
+1. **Personal Account Exposure:** Students must log into personal Google/Gmail accounts on shared computers
+2. **Security Risks:** Forgetting to log out leaves accounts vulnerable
+3. **Inconvenience:** Multiple authentication steps slow down workflow
+4. **Privacy Concerns:** Personal account activity visible on shared devices
+5. **Tool Fragmentation:** Students need multiple websites for different tasks (file storage, QR codes, text tools)
+
+### 10.2 Solution Approach
+
+WINNOVATION addresses these problems by:
+
+1. **Decoupling Identity from Access:** Files accessible via password, not personal login
+2. **Single-Station Platform:** All utilities integrated into one platform
+3. **Privacy-First Design:** No personal account login required for file access
+4. **Security by Default:** Password-protected files with server-side verification
+5. **Convenience:** Quick access to files, QR codes, and text tools without leaving platform
+
+### 10.3 Target Use Cases
+
+- **College Lab Computers:** Access files without logging into personal accounts
+- **Library Computers:** Quick file retrieval on public machines
+- **Cross-Device Transfers:** Share files between devices securely
+- **Quick Utilities:** Generate QR codes, manipulate text without external tools
+- **Note Management:** Save and organize text snippets with folder support
+
+---
+
+## 11. Future Scope
+
+### 11.1 Enhanced Utility Features
+- **File Sharing Links:** Generate shareable links for files
+- **File Versioning:** Track file versions and changes
+- **Advanced Text Tools:** More text manipulation options
+- **Batch Operations:** Bulk file/text operations
+
+### 11.2 Enhanced AI Integration
+- AI-powered file organization
+- Intelligent text suggestions
+- Automated content categorization
+
+### 11.3 Mobile Application
+- Native mobile app for better mobile experience
+- Offline file access
+- Push notifications
+
+### 11.4 Payment Gateway Integration
+- Support for paid courses
+- Subscription models for premium features
+
+### 11.5 Collaboration Features
+- Shared folders for group projects
+- Real-time collaboration on text documents
+- Team-based file management
+
+---
+
+## 12. Conclusion
+
+WINNOVATION represents a significant innovation in educational technology by combining traditional LMS features with a comprehensive utility suite. The platform's main USP—password-protected file access without personal login—solves real problems faced by students in shared computing environments.
+
+The integrated utility suite (Google Drive, Text Management, QR Code Generator, Text Utilities) creates a "single-station" experience where students can accomplish all their tasks without switching between multiple websites or exposing personal credentials.
+
+The platform is built on modern, scalable technologies and follows best practices for security, privacy, and user experience. It addresses both educational management needs and practical productivity challenges, making it a comprehensive solution for modern academic environments.
+
+---
+
+## Appendix A: Key Files Reference
+
+### Utility Implementation Files:
+- `app/googleDrive/page.jsx`: Google Drive interface (1,337 lines)
+- `app/api/googleDrive/route.js`: Drive API endpoints
+- `app/api/googleDrive/folders/route.js`: Folder management API
+- `app/text/page.jsx`: Text management interface
+- `app/api/text/route.js`: Text API endpoints
+- `app/api/text/folders/route.js`: Text folder API
+- `app/qr/page.jsx`: QR code generator
+- `app/textUtils/page.jsx`: Text utilities interface
+- `lib/cache.ts`: Caching utilities
+- `components/drive/PageHeader.jsx`: Drive page header
+- `components/drive/SectionCard.jsx`: Section card component
+
+### Core LMS Files:
+- `app/dashboard/page.jsx`: Role-based dashboards
+- `app/courses/page.jsx`: Course browsing
+- `app/api/admin/*`: Admin API endpoints
+- `lib/authOptions.js`: Authentication configuration
+- `prisma/schema.prisma`: Database schema
+
+---
+
+## Appendix B: Technology Stack Details
+
+### Frontend:
+- Next.js 15.0.7 (App Router)
+- React 18+
+- Tailwind CSS
+- Framer Motion (animations)
+- React Hot Toast (notifications)
+- React QR Code (QR generation)
+- Lucide React (icons)
+
+### Backend:
+- Next.js API Routes
+- Prisma ORM
+- MongoDB
+- NextAuth.js
+- Google APIs (Drive)
+- Bcrypt.js (hashing)
+
+### Development Tools:
+- TypeScript/JavaScript
+- ESLint
+- Git version control
+
+---
+
+## Bibliography
+
+- Next.js Documentation: https://nextjs.org/docs
+- Prisma Documentation: https://www.prisma.io/docs/
+- NextAuth.js Documentation: https://next-auth.js.org/
+- Tailwind CSS Documentation: https://tailwindcss.com/docs/
+- Google Drive API: https://developers.google.com/drive/api
+- React QR Code: https://www.npmjs.com/package/react-qr-code
+
+---
+
+**Document Version:** 2.0  
+**Last Updated:** 2024  
+**Project:** WINNOVATION - Student Learning Management System  
+**Main USP:** Integrated Utility Suite with Password-Protected File Access
