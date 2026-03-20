@@ -115,7 +115,7 @@ export default function NavBar() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center justify-center">
             <Link href="/" className="font-extrabold text-lg bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent mr-8">
-              Winnovation
+              SLMS
             </Link>
 
             {session && (

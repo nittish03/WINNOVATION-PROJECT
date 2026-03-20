@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fig-2 Kiviat (Radar) Graph – SLMS Size Metrics per Module</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 24px; background: #fafafa; }
+    h1 { font-size: 1.25rem; color: #1a1a2e; margin-bottom: 4px; }
+    .subtitle { font-size: 0.875rem; color: #666; margin-bottom: 20px; }
+    .chart-container { max-width: 700px; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    canvas { max-height: 480px; }
+    .fig-label { margin-top: 12px; font-size: 0.75rem; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="chart-container">
+    <h1>Kiviat Metrics Graph: Project 'SLMS'</h1>
+    <p class="subtitle">Checkpoint 'Baseline' – Size metrics per functional module (normalized 0–100).</p>
+    <canvas id="kiviat"></canvas>
+    <p class="fig-label">Fig-2 Kiviat Graph: LOC, File Count, and Functions per module (axes 1.1–4.1 = modules 1–10).</p>
+  </div>
+
+  <script>
+    const labels = [
+      '1.1 Auth', '1.2 Course', '1.3 Enroll', '1.4 Assign', '1.5 Discuss',
+      '2.1 Dash', '2.2 Drive', '3.1 Text', '3.2 QR', '4.1 TextUtils'
+    ];
+    const loc = [898, 1763, 661, 2623, 696, 388, 1822, 982, 193, 306];
+    const fileCount = [6, 10, 4, 15, 6, 3, 5, 4, 1, 1];
+    const functions = [12, 18, 8, 32, 12, 5, 22, 14, 2, 4];
+
+    const maxLoc = Math.max(...loc);
+    const maxFiles = Math.max(...fileCount);
+    const maxFns = Math.max(...functions);
+    const normLoc = loc.map(v => Math.round((v / maxLoc) * 100));
+    const normFiles = fileCount.map(v => Math.round((v / maxFiles) * 100));
+    const normFns = functions.map(v => Math.round((v / maxFns) * 100));
+
+    new Chart(document.getElementById('kiviat'), {
+      type: 'radar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'LOC (normalized)',
+            data: normLoc,
+            backgroundColor: 'rgba(168, 85, 247, 0.2)',
+            borderColor: 'rgb(168, 85, 247)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgb(168, 85, 247)'
+          },
+          {
+            label: 'File Count (normalized)',
+            data: normFiles,
+            backgroundColor: 'rgba(236, 72, 153, 0.2)',
+            borderColor: 'rgb(236, 72, 153)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgb(236, 72, 153)'
+          },
+          {
+            label: 'Functions (normalized)',
+            data: normFns,
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            borderColor: 'rgb(99, 102, 241)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgb(99, 102, 241)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: false }
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { stepSize: 20 }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
