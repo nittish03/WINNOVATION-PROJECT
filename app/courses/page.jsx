@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import axios from "axios"
 import { BookOpen, Users, Plus, Award, Calendar, User } from "lucide-react"
@@ -21,11 +21,7 @@ export default function CoursesPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [coursesRes, skillsRes] = await Promise.all([
         axios.get('/api/courses'),
@@ -45,7 +41,11 @@ export default function CoursesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session?.user?.role])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleCreateCourse = async (e) => {
     e.preventDefault()

@@ -26,7 +26,7 @@ const SignUpPage = () => {
     if(session){
       router.push("/")
     }
-  },[session])
+  },[session, router])
   
   const [otp, setOtp] = useState('');
   const [username, setUsername] = useState('');

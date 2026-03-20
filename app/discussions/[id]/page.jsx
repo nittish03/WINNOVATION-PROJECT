@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
@@ -20,7 +20,7 @@ export default function DiscussionThreadPage() {
   const [reload, setReload] = useState(false)
   const [userColors, setUserColors] = useState({});
 
-  const generateColor = (str) => {
+  const generateColor = useCallback((str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -31,7 +31,46 @@ export default function DiscussionThreadPage() {
       color += ('00' + value.toString(16)).substr(-2);
     }
     return color;
-  }
+  }, [])
+
+  const loadThread = useCallback(async () => {
+    try {
+      const response = await axios.get(`/api/discussions/${id}`)
+      setThread(response.data)
+    } catch (error) {
+      console.error("Error loading discussion thread:", error)
+      toast.error("Failed to load discussion.")
+      router.push("/discussions")
+    }
+  }, [id, router])
+
+  const loadReplies = useCallback(async (isBackground = false) => {
+    try {
+      const response = await axios.get(`/api/discussions/${id}/replies`)
+      const newReplies = response.data;
+
+      setReplies((prevReplies) => {
+        if (JSON.stringify(newReplies) === JSON.stringify(prevReplies)) {
+          return prevReplies;
+        }
+
+        const newColors = {};
+        newReplies.forEach(reply => {
+          if (!newColors[reply.authorId]) {
+            newColors[reply.authorId] = generateColor(reply.authorId);
+          }
+        });
+        setUserColors(newColors);
+        return newReplies;
+      });
+    } catch (error) {
+      console.error("Error loading replies:", error)
+    } finally {
+      if (!isBackground) {
+        setLoading(false)
+      }
+    }
+  }, [id, generateColor])
 
   useEffect(() => {
     if (id) {
@@ -46,43 +85,7 @@ export default function DiscussionThreadPage() {
     }, 500); // Poll every 0.5 seconds
 
     return () => clearInterval(interval);
-  }, [id, reload])
-
-  const loadThread = async () => {
-    try {
-      const response = await axios.get(`/api/discussions/${id}`)
-      setThread(response.data)
-    } catch (error) {
-      console.error("Error loading discussion thread:", error)
-      toast.error("Failed to load discussion.")
-      router.push("/discussions")
-    }
-  }
-
-  const loadReplies = async (isBackground = false) => {
-    try {
-      const response = await axios.get(`/api/discussions/${id}/replies`)
-      const newReplies = response.data;
-
-      // Simple comparison by stringifying the arrays
-      if (JSON.stringify(newReplies) !== JSON.stringify(replies)) {
-        setReplies(newReplies);
-        const newColors = {};
-        newReplies.forEach(reply => {
-          if (!newColors[reply.authorId]) {
-            newColors[reply.authorId] = generateColor(reply.authorId);
-          }
-        });
-        setUserColors(newColors);
-      }
-    } catch (error) {
-      console.error("Error loading replies:", error)
-    } finally {
-      if (!isBackground) {
-        setLoading(false)
-      }
-    }
-  }
+  }, [id, reload, loadThread, loadReplies])
 
   const handleReplySubmit = async (e) => {
     e.preventDefault()

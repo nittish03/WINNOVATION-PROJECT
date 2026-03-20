@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useParams } from "next/navigation"
@@ -42,17 +42,7 @@ export default function AdminAssignmentDetailPage() {
   const [bulkGradeData, setBulkGradeData] = useState({});
   const [bulkGradeLoading, setBulkGradeLoading] = useState(false);
 
-  useEffect(() => {
-    if (!session || session.user.role !== 'admin') {
-      router.push('/dashboard')
-      return
-    }
-    if (params.id) {
-      loadAssignmentData()
-    }
-  }, [session, router, params.id])
-
-  const loadAssignmentData = async () => {
+  const loadAssignmentData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -74,7 +64,17 @@ export default function AdminAssignmentDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    if (!session || session.user.role !== 'admin') {
+      router.push('/dashboard')
+      return
+    }
+    if (params.id) {
+      loadAssignmentData()
+    }
+  }, [session, router, params.id, loadAssignmentData])
 
   // Edit Assignment Functions
   const handleEditClick = () => {

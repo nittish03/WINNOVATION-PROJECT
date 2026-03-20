@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -18,15 +18,7 @@ export default function AdminEnrollmentsPage() {
     search: ''
   })
 
-  useEffect(() => {
-    if (!session || session.user.role !== 'admin') {
-      router.push('/dashboard')
-      return
-    }
-    loadEnrollments()
-  }, [session, router, filters])
-
-  const loadEnrollments = async () => {
+  const loadEnrollments = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (filters.status !== 'all') params.append('status', filters.status)
@@ -41,7 +33,15 @@ export default function AdminEnrollmentsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters.courseId, filters.status])
+
+  useEffect(() => {
+    if (!session || session.user.role !== 'admin') {
+      router.push('/dashboard')
+      return
+    }
+    loadEnrollments()
+  }, [session, router, loadEnrollments])
 
   const updateEnrollmentStatus = async (enrollmentId, newStatus) => {
     try {

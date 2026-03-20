@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -16,15 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   console.log(session)
-  useEffect(() => {
-    if (!session) {
-      router.push('/login')
-      return
-    }
-    loadDashboardData()
-  }, [session, router])
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       if (session.user.role === 'admin') {
         const response = await axios.get('/api/admin/dashboard')
@@ -40,7 +32,15 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session?.user?.role])
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/login')
+      return
+    }
+    loadDashboardData()
+  }, [session, router, loadDashboardData])
 
   if (loading) {
     return (

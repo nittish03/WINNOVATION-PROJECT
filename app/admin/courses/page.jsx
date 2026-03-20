@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -33,20 +33,7 @@ export default function AdminCoursesPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [publishingId, setPublishingId] = useState(null);
 
-  useEffect(() => {
-    if (!session || session.user.role !== "admin") {
-      router.push("/dashboard");
-      return;
-    }
-    loadCourses();
-    loadSkills();
-  }, [session, router]);
-
-  useEffect(() => {
-    filterCourses();
-  }, [courses, searchTerm, searchFilter]);
-
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       const response = await axios.get("/api/admin/courses");
       setCourses(response.data);
@@ -56,9 +43,9 @@ export default function AdminCoursesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadSkills = async () => {
+  const loadSkills = useCallback(async () => {
     try {
       const response = await axios.get("/api/admin/skills");
       setSkills(response.data);
@@ -66,9 +53,9 @@ export default function AdminCoursesPage() {
       console.error("Error loading skills:", error);
       toast.error("Failed to load skills");
     }
-  };
+  }, []);
 
-  const filterCourses = () => {
+  const filterCourses = useCallback(() => {
     let filtered = courses;
 
     // Filter by search term
@@ -89,7 +76,20 @@ export default function AdminCoursesPage() {
     }
 
     setFilteredCourses(filtered);
-  };
+  }, [courses, searchTerm, searchFilter]);
+
+  useEffect(() => {
+    if (!session || session.user.role !== "admin") {
+      router.push("/dashboard");
+      return;
+    }
+    loadCourses();
+    loadSkills();
+  }, [session, router, loadCourses, loadSkills]);
+
+  useEffect(() => {
+    filterCourses();
+  }, [filterCourses]);
 
   const clearSearch = () => {
     setSearchTerm("");

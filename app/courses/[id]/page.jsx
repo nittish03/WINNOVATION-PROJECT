@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
@@ -35,15 +35,7 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true)
   const [enrolling, setEnrolling] = useState(false)
 
-  useEffect(() => {
-    if (!session) {
-      router.push('/login')
-      return
-    }
-    loadCourseData()
-  }, [session, courseId, router])
-
-  const loadCourseData = async () => {
+  const loadCourseData = useCallback(async () => {
     try {
       const [courseRes, enrollmentRes, assignmentsRes, discussionsRes] = await Promise.all([
         axios.get(`/api/courses/${courseId}`),
@@ -69,7 +61,15 @@ export default function CourseDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [courseId, router, session?.user?.role])
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/login')
+      return
+    }
+    loadCourseData()
+  }, [session, courseId, router, loadCourseData])
 
   const handleEnroll = async () => {
     if (!session || session.user.role !== 'student') {

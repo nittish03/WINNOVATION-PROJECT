@@ -1,6 +1,6 @@
 // Simple in-memory cache implementation for both client and server
 interface CacheEntry {
-  data: any;
+  data: unknown;
   timestamp: number;
   ttl: number;
 }
@@ -11,7 +11,7 @@ const cache = new Map<string, CacheEntry>();
 export async function fetchCached(
   url: string,
   options: { ttlMs?: number; version?: string | number } = {}
-): Promise<any> {
+): Promise<unknown> {
   const { ttlMs = 60000, version } = options;
   const cacheKey = `${url}:${version || ''}`;
   
@@ -61,7 +61,7 @@ export function cacheInvalidate(pattern?: string): void {
   }
 }
 
-export function cacheSet(key: string, data: any, ttlMs: number = 60000): void {
+export function cacheSet(key: string, data: unknown, ttlMs: number = 60000): void {
   cache.set(key, {
     data,
     timestamp: Date.now(),
@@ -69,7 +69,7 @@ export function cacheSet(key: string, data: any, ttlMs: number = 60000): void {
   });
 }
 
-export function cacheGet(key: string): any | null {
+export function cacheGet(key: string): unknown | null {
   const cached = cache.get(key);
   if (cached && Date.now() - cached.timestamp < cached.ttl) {
     return cached.data;
@@ -82,7 +82,7 @@ const serverCache = {
   wrap: async function<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as T;
     }
 
     const data = await fn();

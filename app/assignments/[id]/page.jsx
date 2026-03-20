@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter, useParams } from "next/navigation"
 import axios from "axios"
@@ -34,15 +34,7 @@ export default function AssignmentDetailPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submissionText, setSubmissionText] = useState('')
 
-  useEffect(() => {
-    if (!session) {
-      router.push('/login')
-      return
-    }
-    loadAssignmentData()
-  }, [session, assignmentId, router])
-
-  const loadAssignmentData = async () => {
+  const loadAssignmentData = useCallback(async () => {
     try {
       const [assignmentRes, submissionRes, gradeRes] = await Promise.all([
         axios.get(`/api/assignments/${assignmentId}`),
@@ -72,7 +64,15 @@ export default function AssignmentDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [assignmentId, router, session?.user?.role])
+
+  useEffect(() => {
+    if (!session) {
+      router.push('/login')
+      return
+    }
+    loadAssignmentData()
+  }, [session, assignmentId, router, loadAssignmentData])
 
   const handleSubmission = async (e) => {
     e.preventDefault()
